@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { Role } from '@prisma/client';
+import { Role } from '../types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

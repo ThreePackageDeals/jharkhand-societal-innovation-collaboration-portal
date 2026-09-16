@@ -171,6 +171,10 @@ export interface Organization {
   locationCoords: LocationCoords;
 }
 
+export type IndustryPartner = Organization;
+export type Role = 'CITIZEN' | 'STUDENT' | 'FACULTY' | 'INDUSTRY_REP' | 'UNIVERSITY_ADMIN' | 'GOVERNMENT_ADMIN' | 'SUPER_ADMIN' | 'GOVT_ADMIN';
+export type VerificationStatus = 'NOT_REQUIRED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+
 export interface ProjectMilestone {
   id: string;
   title: string;

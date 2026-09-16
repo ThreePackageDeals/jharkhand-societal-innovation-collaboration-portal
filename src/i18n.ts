@@ -241,7 +241,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ana_mine_title': 'Mine Fire Mitigation',
     'ana_ip_title': 'Grassroots IP & Startups',
     'ana_domain_breakdown': 'Thematic Domain Breakdown',
-    'ana_geo_distribution': 'District Ledger & Spatial Heatmap',
+    'ana_geo_distribution': 'District Ledger & Spatial Distribution',
     'ana_geo_desc': 'Across all 24 administrative districts',
     'ana_sort_challenges': 'Challenges',
     'ana_sort_projects': 'Projects',

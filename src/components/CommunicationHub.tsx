@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   MessageSquare, 
   Search, 
@@ -25,8 +26,23 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
   userRole,
   onViewProblemDetails
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'inbox' | 'discussions'>('discussions');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeSubTab, setActiveSubTab] = useState<'inbox' | 'discussions'>(
+    requestedTab === 'inbox' ? 'inbox' : 'discussions'
+  );
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (requestedTab === 'inbox' || requestedTab === 'discussions') {
+      setActiveSubTab(requestedTab);
+    }
+  }, [requestedTab]);
+
+  const selectTab = (tab: 'inbox' | 'discussions') => {
+    setActiveSubTab(tab);
+    setSearchParams({ tab });
+  };
 
   // Map user role for UI
   const getRoleBadge = (role: string) => {
@@ -96,7 +112,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
       <div className="bg-white border border-stone-300 p-3 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4 border-b border-stone-200 w-full md:w-auto overflow-x-auto no-scrollbar">
           <button
-            onClick={() => setActiveSubTab('inbox')}
+            onClick={() => selectTab('inbox')}
             className={`py-2.5 px-2 md:px-4 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors ${
               activeSubTab === 'inbox'
                 ? 'border-b-2 border-stone-900 font-bold text-stone-900'
@@ -111,7 +127,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
           </button>
           
           <button
-            onClick={() => setActiveSubTab('discussions')}
+            onClick={() => selectTab('discussions')}
             className={`py-2.5 px-2 md:px-4 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors ${
               activeSubTab === 'discussions'
                 ? 'border-b-2 border-stone-900 font-bold text-stone-900'

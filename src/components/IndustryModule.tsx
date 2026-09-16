@@ -46,6 +46,13 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
   const currentPartner = industryPartners.find((p) => p.id === selectedPartnerId) || industryPartners[0];
 
   if (!currentPartner) {
+    if (industryPartners.length === 0) {
+      return (
+        <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
+          No industry partners found in the system.
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
         {t('ind_loading')}

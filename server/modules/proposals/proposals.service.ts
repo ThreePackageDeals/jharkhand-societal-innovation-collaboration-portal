@@ -148,6 +148,7 @@ export class ProposalService {
 
     const proposals = await prisma.solutionProposal.findMany({
       where,
+      include: { milestones: true },
     });
     return proposals.map(p => this.mapProposal(p));
   }
@@ -174,6 +175,7 @@ export class ProposalService {
         contingency: p.budgetContingency,
         totalAmount: p.budgetTotal,
       },
+      milestones: p.milestones || [],
     };
   }
 }

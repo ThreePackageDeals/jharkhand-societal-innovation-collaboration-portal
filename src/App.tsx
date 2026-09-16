@@ -14,7 +14,8 @@ import { AuthProvider } from './AuthContext';
 import { AuthPage } from './pages/AuthPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminVerificationQueue } from './pages/AdminVerificationQueue';
-import { Role } from '@prisma/client';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { Role } from './types';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -27,6 +28,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <AuthProvider>
+      <ErrorBoundary>
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route element={<Layout />}>
@@ -42,6 +44,7 @@ export default function App() {
           <Route path="/verification-queue" element={<ProtectedRoute allowedRoles={['UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AdminVerificationQueue /></></ProtectedRoute>} />
         </Route>
       </Routes>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

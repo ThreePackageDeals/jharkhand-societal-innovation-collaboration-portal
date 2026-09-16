@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Check, X, ExternalLink, Search, Filter } from 'lucide-react';
 import { useAuth } from '../AuthContext';
-import { Role, VerificationStatus } from '@prisma/client';
+import { Role, VerificationStatus } from '../types';
 
 interface VerificationRequest {
   id: string;

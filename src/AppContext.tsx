@@ -52,6 +52,15 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const fetchWithTimeout = (url: string, timeoutMs = 8000) => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(url, { signal: controller.signal }).finally(() => {
+    window.clearTimeout(timeout);
+  });
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
@@ -73,17 +82,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Initial Data Fetching from server APIs
   const loadAllData = useCallback(async () => {
     try {
-      const [probRes, anaRes, uniRes, indRes, propRes, notifRes] = await Promise.all([
-        fetch('/api/problems'),
-        fetch('/api/analytics'),
-        fetch('/api/universities'),
-        fetch('/api/industry/partners'),
-        fetch('/api/proposals'),
-        fetch('/api/notifications'),
+      const results = await Promise.allSettled([
+        fetchWithTimeout('/api/problems'),
+        fetchWithTimeout('/api/analytics'),
+        fetchWithTimeout('/api/universities'),
+        fetchWithTimeout('/api/industry/partners'),
+        fetchWithTimeout('/api/proposals'),
+        fetchWithTimeout('/api/notifications'),
       ]);
+      const [probResult, anaResult, uniResult, indResult, propResult, notifResult] = results;
 
-      if (probRes.ok) {
-        const probData = await probRes.json();
+      if (probResult.status === 'fulfilled' && probResult.value.ok) {
+        const probData = await probResult.value.json();
         const problemsData = Array.isArray(probData.data) ? probData.data : (Array.isArray(probData) ? probData : []);
         const normalizedProblems = problemsData.map((p: any) => ({
           ...p,
@@ -93,24 +103,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
         setProblems(normalizedProblems);
       }
-      if (anaRes.ok) {
-        const anaData = await anaRes.json();
+      if (anaResult.status === 'fulfilled' && anaResult.value.ok) {
+        const anaData = await anaResult.value.json();
         setAnalytics(anaData.data || anaData || {});
       }
-      if (uniRes.ok) {
-        const uniData = await uniRes.json();
+      if (uniResult.status === 'fulfilled' && uniResult.value.ok) {
+        const uniData = await uniResult.value.json();
         setUniversities(Array.isArray(uniData.data) ? uniData.data : (Array.isArray(uniData) ? uniData : []));
       }
-      if (indRes.ok) {
-        const indData = await indRes.json();
+      if (indResult.status === 'fulfilled' && indResult.value.ok) {
+        const indData = await indResult.value.json();
         setIndustryPartners(Array.isArray(indData.data) ? indData.data : (Array.isArray(indData) ? indData : []));
       }
-      if (propRes.ok) {
-        const propData = await propRes.json();
+      if (propResult.status === 'fulfilled' && propResult.value.ok) {
+        const propData = await propResult.value.json();
         setProposals(Array.isArray(propData.data) ? propData.data : (Array.isArray(propData) ? propData : []));
       }
-      if (notifRes.ok) {
-        const notifData = await notifRes.json();
+      if (notifResult.status === 'fulfilled' && notifResult.value.ok) {
+        const notifData = await notifResult.value.json();
         setNotifications(Array.isArray(notifData.data) ? notifData.data : (Array.isArray(notifData) ? notifData : []));
       }
     } catch (err) {

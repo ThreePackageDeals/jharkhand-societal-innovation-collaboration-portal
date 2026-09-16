@@ -72,7 +72,7 @@ export function Layout() {
       {/* Global Chat/Forum Trigger */}
       <div className="fixed bottom-6 right-6 z-50">
         <button
-          onClick={() => navigate('/communication')}
+          onClick={() => navigate('/communication?tab=discussions')}
           className="relative p-4 bg-[#BC5434] text-white rounded-full shadow-xl hover:bg-[#A3452B] transition-all duration-200 cursor-pointer active:scale-90 group"
           title="Community Forum"
         >
@@ -99,7 +99,7 @@ export function Layout() {
         onMarkAllAsRead={handleMarkAllNotificationsRead}
         onOpenCommunicationHub={() => {
           setIsNotificationOpen(false);
-          navigate('/communication');
+          navigate('/communication?tab=inbox');
         }}
       />
 

@@ -71,6 +71,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
   const currentHei = universities.find((u) => u.id === selectedHeiId) || universities[0];
 
   if (!currentHei) {
+    if (universities.length === 0) {
+      return (
+        <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
+          No universities found in the system.
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
         {t('univ_loading')}

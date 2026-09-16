@@ -163,7 +163,7 @@ export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistri
         d3.select(this).raise();
 
         d3.select(this)
-          .attr('stroke', '#ffffff')
+          .attr('stroke', '#000000')
           .attr('stroke-width', 2);
 
         const distName = d.properties.Dist_Name || '';

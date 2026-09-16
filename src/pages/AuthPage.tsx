@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { Role, OrgType } from '@prisma/client';
+import { Role, VerificationStatus } from '../types';
 import { User, GraduationCap, Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
 type AuthStep = 'ROLE_SELECTION' | 'CREDENTIALS' | 'ONBOARDING' | 'COMPLETING';

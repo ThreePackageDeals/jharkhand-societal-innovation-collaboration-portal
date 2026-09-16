@@ -3,63 +3,83 @@ import { IndustryPartner } from '../../../src/types';
 import { problemsService } from '../problems/problems.service';
 import { proposalService } from '../proposals/proposals.service';
 
+// JSONB columns may hold either a JSON array or a JSON-encoded string (legacy
+// rows written with JSON.stringify). Normalize so the API always returns arrays.
+const toArray = (value: any): any[] => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
+    } catch {
+      return value ? [value] : [];
+    }
+  }
+  return [];
+};
+
 export class IndustryService {
   async getAllPartners() {
-    const partners = await prisma.industryPartner.findMany();
+    const partners = await prisma.organization.findMany({
+      where: {
+        type: { in: ['CORPORATE', 'CSR', 'MSME', 'STARTUP'] }
+      }
+    });
     return partners.map(p => ({
       ...p,
-      focusDomains: JSON.parse(p.focusDomains || '[]'),
-      pilotTestSites: JSON.parse(p.pilotTestSites || '[]'),
+      focusDomains: toArray(p.focusDomains),
+      pilotTestSites: toArray(p.pilotTestSites),
     }));
   }
 
   async getPartnerById(id: string) {
-    const partner = await prisma.industryPartner.findUnique({
+    const partner = await prisma.organization.findUnique({
       where: { id },
     });
     if (!partner) return null;
     return {
       ...partner,
-      focusDomains: JSON.parse(partner.focusDomains || '[]'),
-      pilotTestSites: JSON.parse(partner.pilotTestSites || '[]'),
+      focusDomains: toArray(partner.focusDomains),
+      pilotTestSites: toArray(partner.pilotTestSites),
     };
   }
 
   async createPartner(data: any) {
     const { focusDomains, pilotTestSites, ...rest } = data;
-    const newPartner = await prisma.industryPartner.create({
+    const newPartner = await prisma.organization.create({
       data: {
         ...rest,
-        focusDomains: JSON.stringify(focusDomains || []),
-        pilotTestSites: JSON.stringify(pilotTestSites || []),
+        type: data.type || 'CORPORATE',
+        focusDomains: focusDomains || [],
+        pilotTestSites: pilotTestSites || [],
       },
     });
     return {
       ...newPartner,
-      focusDomains: JSON.parse(newPartner.focusDomains || '[]'),
-      pilotTestSites: JSON.parse(newPartner.pilotTestSites || '[]'),
+      focusDomains: toArray(newPartner.focusDomains),
+      pilotTestSites: toArray(newPartner.pilotTestSites),
     };
   }
 
   async updatePartner(id: string, data: any) {
     const { focusDomains, pilotTestSites, ...rest } = data;
     const updateData: any = { ...rest };
-    if (focusDomains) updateData.focusDomains = JSON.stringify(focusDomains);
-    if (pilotTestSites) updateData.pilotTestSites = JSON.stringify(pilotTestSites);
+    if (focusDomains) updateData.focusDomains = focusDomains;
+    if (pilotTestSites) updateData.pilotTestSites = pilotTestSites;
 
-    const updatedPartner = await prisma.industryPartner.update({
+    const updatedPartner = await prisma.organization.update({
       where: { id },
       data: updateData,
     });
     return {
       ...updatedPartner,
-      focusDomains: JSON.parse(updatedPartner.focusDomains || '[]'),
-      pilotTestSites: JSON.parse(updatedPartner.pilotTestSites || '[]'),
+      focusDomains: toArray(updatedPartner.focusDomains),
+      pilotTestSites: toArray(updatedPartner.pilotTestSites),
     };
   }
 
   async deletePartner(id: string) {
-    return await prisma.industryPartner.delete({
+    return await prisma.organization.delete({
       where: { id },
     });
   }

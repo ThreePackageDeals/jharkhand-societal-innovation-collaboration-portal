@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Role, VerificationStatus } from '@prisma/client';
+import { Role, VerificationStatus } from './types';
 
 interface UserProfile {
   id: string;
@@ -55,9 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Dev-mode session handling: a full page reload starts a *fresh* session.
+  // Clear any persisted token on boot so the auth page shows again on every
+  // refresh instead of silently re-authenticating from localStorage. Login /
+  // Dev Bypass still work within the current page session.
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    localStorage.removeItem('auth_token');
+    setUser(null);
+    setIsLoading(false);
+  }, []);
 
   const login = async (token: string) => {
     localStorage.setItem('auth_token', token);
