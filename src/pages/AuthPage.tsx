@@ -11,7 +11,7 @@ export const AuthPage = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, completeProfile, bypassLogin } = useAuth();
+  const { login, completeProfile, bypassLogin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -77,8 +77,20 @@ export const AuthPage = () => {
       await completeProfile(profileData);
       navigate(from, { replace: true });
     } catch (err: any) {
-      alert(err.message);
-      setStep('ONBOARDING');
+      const msg = (err?.message || '').toLowerCase();
+      // A document/verification error means the elevated login session must be
+      // revoked — otherwise the protected (guarded) pages stay accessible even
+      // though verification never succeeded.
+      const isVerificationError =
+        msg.includes('document') || msg.includes('verification') || msg.includes('registration document');
+      if (isVerificationError) {
+        alert(err.message);
+        logout();
+        setStep('ROLE_SELECTION');
+      } else {
+        alert(err.message);
+        setStep('ONBOARDING');
+      }
     } finally {
       setIsLoading(false);
     }
