@@ -48,6 +48,35 @@
   color: #1A1A1A;
 }
 
+.location-picker-pin {
+  background: transparent;
+  border: 0;
+}
+
+.location-picker-pin__marker {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #BC5434;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 30%);
+  transform: rotate(-45deg);
+}
+
+.location-picker-pin__marker::after {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #fff;
+  content: '';
+}
+
 /* Custom scrollbar for editorial elegance */
 ::-webkit-scrollbar {
   width: 6px;

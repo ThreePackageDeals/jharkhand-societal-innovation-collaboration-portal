@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Check, X, ExternalLink, Search, Filter } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../LanguageContext';
 import { Role, VerificationStatus } from '../types';
 
 interface VerificationRequest {
@@ -30,6 +31,8 @@ export const AdminVerificationQueue = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const { user } = useAuth();
+  const { t } = useLanguage();
+
 
   useEffect(() => {
     fetchRequests();
@@ -119,7 +122,7 @@ export const AdminVerificationQueue = () => {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-stone-600">
         <Loader2 className="w-8 h-8 animate-spin text-[#BC5434] mb-3" />
-        <p className="text-xs uppercase tracking-widest font-bold">Loading Verification Queue</p>
+        <p className="text-xs uppercase tracking-widest font-bold">{t('admin.loading')}</p>
       </div>
     );
   }
@@ -128,8 +131,8 @@ export const AdminVerificationQueue = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight">Verification Queue</h1>
-          <p className="text-stone-500 font-serif italic">Review and verify high-trust role applications</p>
+          <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight">{t('admin.title')}</h1>
+          <p className="text-stone-500 font-serif italic">{t('admin.subtitle')}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -137,7 +140,7 @@ export const AdminVerificationQueue = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
             <input
               type="text"
-              placeholder="Search applicants..."
+              placeholder={t('admin.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm w-64"
@@ -151,10 +154,10 @@ export const AdminVerificationQueue = () => {
               onChange={(e) => setFilterRole(e.target.value)}
               className="p-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm cursor-pointer"
             >
-              <option value="ALL">All Roles</option>
-              <option value="FACULTY">Faculty</option>
-              <option value="INDUSTRY_REP">Industry Representative</option>
-              <option value="UNIVERSITY_ADMIN">University Admin</option>
+              <option value="ALL">{t('admin.all_roles')}</option>
+              <option value="FACULTY">{t('admin.role_faculty')}</option>
+              <option value="INDUSTRY_REP">{t('admin.role_industry')}</option>
+              <option value="UNIVERSITY_ADMIN">{t('admin.role_university')}</option>
             </select>
           </div>
         </div>
@@ -165,18 +168,18 @@ export const AdminVerificationQueue = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
-                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">Applicant</th>
-                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">Role</th>
-                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">Affiliation</th>
-                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">Documents</th>
-                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600 text-right">Actions</th>
+                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">{t('admin.col_applicant')}</th>
+                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">{t('admin.col_role')}</th>
+                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">{t('admin.col_affiliation')}</th>
+                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600">{t('admin.col_docs')}</th>
+                <th className="p-4 text-[10px] uppercase font-bold tracking-widest text-stone-600 text-right">{t('admin.col_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {filteredRequests.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-12 text-center text-stone-500 font-serif italic">
-                    No pending verification requests found.
+                    {t('admin.no_requests')}
                   </td>
                 </tr>
               ) : (

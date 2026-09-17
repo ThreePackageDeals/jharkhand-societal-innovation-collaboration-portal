@@ -5,6 +5,10 @@ import { universityService } from '../universities/universities.service';
 import { cosineSimilarity } from '../../utils/math';
 
 export class AIService {
+  async transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+    return gemini.transcribeAudio(audioBase64, mimeType);
+  }
+
   async analyzeProblem(data: {
     title: string;
     description: string;

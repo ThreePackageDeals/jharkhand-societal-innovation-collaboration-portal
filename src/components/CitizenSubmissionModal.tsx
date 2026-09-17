@@ -59,17 +59,20 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioBase64: base64data, mimeType: 'audio/webm' })
             });
-            if (res.ok) {
-              const data = await res.json();
-              if (data.text) {
-                onTranscript(data.text.trim());
-              }
+            const responseBody = await res.json().catch(() => null);
+            if (!res.ok) {
+              throw new Error(responseBody?.error?.message || `Transcription failed (${res.status})`);
+            }
+
+            const text = responseBody?.data?.text || responseBody?.text;
+            if (text?.trim()) {
+              onTranscript(text.trim());
             } else {
-              alert('Transcription failed. Please try again.');
+              alert('No speech was detected. Please try recording again.');
             }
           } catch (err) {
             console.error(err);
-            alert('Transcription error.');
+            alert(err instanceof Error ? err.message : 'Transcription error.');
           } finally {
             setIsTranscribing(false);
           }

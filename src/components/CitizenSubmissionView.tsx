@@ -22,6 +22,7 @@ import {
 import { JHARKHAND_DISTRICTS, THEMATIC_DOMAINS } from '../data/jharkhandData';
 import { DomainTheme, District, SubmitterType, ProblemStatement, AIAnalysisResult } from '../types';
 import { useLanguage } from '../LanguageContext';
+import { LocationPickerMap } from './LocationPickerMap';
 
 interface CitizenSubmissionViewProps {
   onNavigate: () => void;
@@ -59,17 +60,20 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioBase64: base64data, mimeType: 'audio/webm' })
             });
-            if (res.ok) {
-              const data = await res.json();
-              if (data.text) {
-                onTranscript(data.text.trim());
-              }
+            const responseBody = await res.json().catch(() => null);
+            if (!res.ok) {
+              throw new Error(responseBody?.error?.message || `Transcription failed (${res.status})`);
+            }
+
+            const text = responseBody?.data?.text || responseBody?.text;
+            if (text?.trim()) {
+              onTranscript(text.trim());
             } else {
-              alert('Transcription failed. Please try again.');
+              alert('No speech was detected. Please try recording again.');
             }
           } catch (err) {
             console.error(err);
-            alert('Transcription error.');
+            alert(err instanceof Error ? err.message : 'Transcription error.');
           } finally {
             setIsTranscribing(false);
           }
@@ -505,6 +509,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                       className="text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] font-mono focus:outline-none focus:border-[#BC5434]"
                     />
                   </div>
+                  <LocationPickerMap
+                    latitude={lat}
+                    longitude={lng}
+                    onLocationChange={({ lat: nextLat, lng: nextLng }) => {
+                      setLat(nextLat);
+                      setLng(nextLng);
+                    }}
+                  />
                 </div>
               </div>
 

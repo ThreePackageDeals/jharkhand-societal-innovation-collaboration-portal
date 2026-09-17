@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { AudioTranscriptionConfigMode, GoogleGenAI } from '@google/genai';
 import { ENV } from '../config/env';
 import { logger } from './logger';
 
@@ -43,6 +43,29 @@ class GeminiClient {
       contents: [{ parts: [{ text }] }],
     });
     return response?.embeddings?.[0]?.values ?? [];
+  }
+
+  public async transcribeAudio(audioBase64: string, mimeType: string) {
+    if (!this.client) {
+      throw new Error('Gemini client not initialized. Check your API key.');
+    }
+
+    const response = await this.client.models.generateContent({
+      model: 'gemini-3.5-transcribe',
+      contents: [{
+        inlineData: {
+          data: audioBase64,
+          mimeType,
+        },
+      }],
+      config: {
+        audioTranscriptionConfig: {
+          mode: AudioTranscriptionConfigMode.SMART,
+        },
+      },
+    });
+
+    return response.text?.trim() || '';
   }
 
   public isConfigured(): boolean {

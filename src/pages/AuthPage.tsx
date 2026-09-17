@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../LanguageContext';
 import { Role, VerificationStatus } from '../types';
 import { User, GraduationCap, Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -12,6 +13,7 @@ export const AuthPage = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, completeProfile, bypassLogin, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,10 +21,10 @@ export const AuthPage = () => {
   const from = location.state?.from?.pathname || '/';
 
   const roles = [
-    { id: 'CITIZEN' as Role, label: "I'm a Citizen", icon: User, description: "Report local problems & track solutions" },
-    { id: 'STUDENT' as Role, label: "I'm a Student", icon: GraduationCap, description: "Solve challenges via your university" },
-    { id: 'FACULTY' as Role, label: "I'm Faculty", icon: ShieldCheck, description: "Mentor students & oversee projects" },
-    { id: 'INDUSTRY_REP' as Role, label: "I represent Industry", icon: Building2, description: "Fund, mentor & deploy solutions" },
+    { id: 'CITIZEN' as Role, label: t('auth.role_citizen_label'), icon: User, description: t('auth.role_citizen_desc') },
+    { id: 'STUDENT' as Role, label: t('auth.role_student_label'), icon: GraduationCap, description: t('auth.role_student_desc') },
+    { id: 'FACULTY' as Role, label: t('auth.role_faculty_label'), icon: ShieldCheck, description: t('auth.role_faculty_desc') },
+    { id: 'INDUSTRY_REP' as Role, label: t('auth.role_industry_label'), icon: Building2, description: t('auth.role_industry_desc') },
   ];
 
   const handleRoleSelect = (role: Role) => {
@@ -103,8 +105,8 @@ export const AuthPage = () => {
         {step === 'ROLE_SELECTION' && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">Welcome</h1>
-              <p className="text-stone-500 text-sm font-serif italic">Please select your role to continue</p>
+              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">{t('auth.welcome')}</h1>
+              <p className="text-stone-500 text-sm font-serif italic">{t('auth.role_select')}</p>
             </div>
             <div className="grid gap-4">
               {roles.map((role) => (
@@ -133,7 +135,7 @@ export const AuthPage = () => {
                 }}
                 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
               >
-                Dev Bypass Access
+                {t('auth.dev_bypass')}
               </button>
             </div>
           </div>
@@ -141,29 +143,29 @@ export const AuthPage = () => {
 
         {step === 'CREDENTIALS' && (
           <div className="space-y-6">
-            <button onClick={() => setStep('ROLE_SELECTION')} className="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-[#BC5434] transition-colors cursor-pointer">← Back to roles</button>
+            <button onClick={() => setStep('ROLE_SELECTION')} className="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-[#BC5434] transition-colors cursor-pointer">{t('auth.back_to_roles')}</button>
             <div className="text-center mb-8">
-              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">Sign In</h1>
-              <p className="text-stone-500 text-sm font-serif italic">Verify your identity to proceed</p>
+              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">{t('auth.signin')}</h1>
+              <p className="text-stone-500 text-sm font-serif italic">{t('auth.signin_desc')}</p>
             </div>
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div className="space-y-1">
-                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Email Address</label>
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.email_label')}</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
-                  placeholder="email@example.com"
+                  placeholder={t('auth.email_placeholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <button type="button" className="p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors flex items-center justify-center text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer">
-                  Google OAuth
+                  {t('auth.google_oauth')}
                 </button>
                 <button type="button" className="p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors flex items-center justify-center text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer">
-                  Phone OTP
+                  {t('auth.phone_otp')}
                 </button>
               </div>
               <button
@@ -171,7 +173,7 @@ export const AuthPage = () => {
                 disabled={isLoading}
                 className="w-full p-3 bg-[#1A1A1A] text-white rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors flex items-center justify-center cursor-pointer"
               >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : t('auth.continue')}
               </button>
             </form>
           </div>
@@ -180,38 +182,38 @@ export const AuthPage = () => {
         {step === 'ONBOARDING' && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">Complete Profile</h1>
-              <p className="text-stone-500 text-sm font-serif italic">Help us verify your role in the portal</p>
+              <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">{t('auth.profile_title')}</h1>
+              <p className="text-stone-500 text-sm font-serif italic">{t('auth.profile_desc')}</p>
             </div>
             <form onSubmit={handleOnboardingSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Full Name</label>
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.name_label')}</label>
                   <input name="fullName" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Phone Number</label>
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.phone_label')}</label>
                   <input name="phone" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">District</label>
-                <input name="district" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder="e.g. Ranchi" />
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.district_label')}</label>
+                <input name="district" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder={t('auth.district_placeholder')} />
               </div>
 
               {selectedRole === 'STUDENT' && (
                 <div className="space-y-4 p-4 bg-[#FAF7F2] border border-stone-200 rounded-sm">
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">University ID</label>
-                    <input name="universityId" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder="hei-bit-mesra" />
+                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.univ_id_label')}</label>
+                    <input name="universityId" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder={t('auth.univ_id_placeholder')} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Student ID</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.student_id_label')}</label>
                       <input name="studentIdNumber" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Department</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.dept_label')}</label>
                       <input name="department" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                   </div>
@@ -221,21 +223,21 @@ export const AuthPage = () => {
               {selectedRole === 'FACULTY' && (
                 <div className="space-y-4 p-4 bg-[#FAF7F2] border border-stone-200 rounded-sm">
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">University ID</label>
-                    <input name="universityId" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder="hei-bit-mesra" />
+                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.univ_id_label')}</label>
+                    <input name="universityId" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder={t('auth.univ_id_placeholder')} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Employee ID</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.employee_id_label')}</label>
                       <input name="employeeId" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Designation</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.designation_label')}</label>
                       <input name="designation" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Department</label>
+                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.dept_label')}</label>
                     <input name="department" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                   </div>
                 </div>
@@ -244,32 +246,32 @@ export const AuthPage = () => {
               {selectedRole === 'INDUSTRY_REP' && (
                 <div className="space-y-4 p-4 bg-[#FAF7F2] border border-stone-200 rounded-sm">
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Organization Name</label>
+                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.org_name_label')}</label>
                     <input name="organizationName" required className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Org Type</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.org_type_label')}</label>
                       <select name="orgType" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm">
-                        <option value="CORPORATE">Corporate</option>
-                        <option value="STARTUP">Startup</option>
-                        <option value="MSME">MSME</option>
-                        <option value="CSR">CSR Foundation</option>
-                        <option value="RESEARCH_LAB">Research Lab</option>
+                        <option value="CORPORATE">{t('auth.org_corporate')}</option>
+                        <option value="STARTUP">{t('auth.org_startup')}</option>
+                        <option value="MSME">{t('auth.org_msme')}</option>
+                        <option value="CSR">{t('auth.org_csr')}</option>
+                        <option value="RESEARCH_LAB">{t('auth.org_research')}</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Reg Number (GSTIN/CIN)</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.reg_num_label')}</label>
                       <input name="registrationNumber" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Website</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.website_label')}</label>
                       <input name="website" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Designation</label>
+                      <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.designation_label')}</label>
                       <input name="industryDesignation" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
                     </div>
                   </div>
@@ -281,7 +283,7 @@ export const AuthPage = () => {
                 disabled={isLoading}
                 className="w-full p-3 bg-[#BC5434] text-white rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-[#A3452B] transition-colors flex items-center justify-center cursor-pointer shadow-sm"
               >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Complete Profile'}
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : t('auth.profile_title')}
               </button>
             </form>
           </div>
@@ -290,7 +292,7 @@ export const AuthPage = () => {
         {step === 'COMPLETING' && (
           <div className="text-center py-12 space-y-4">
             <Loader2 className="h-12 w-12 animate-spin mx-auto text-[#BC5434]" />
-            <p className="text-stone-600 text-sm font-serif italic">Saving your profile... Please wait.</p>
+            <p className="text-stone-600 text-sm font-serif italic">{t('auth.saving_profile')}</p>
           </div>
         )}
       </div>

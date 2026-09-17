@@ -1,14 +1,15 @@
 import React from 'react';
-import { 
-  Bell, 
-  X, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Info, 
+import {
+  Bell,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
   MessageSquare,
   AlertCircle
 } from 'lucide-react';
 import { SystemNotification } from '../types';
+import { useLanguage } from '../LanguageContext';
 
 interface NotificationPanelProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   onMarkAllAsRead,
   onOpenCommunicationHub
 }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -44,10 +46,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   const timeAgo = (dateStr: string) => {
     const diffMs = Date.now() - new Date(dateStr).getTime();
     const diffMins = Math.round(diffMs / 60000);
-    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 60) return t('notifications_m_ago', diffMins);
     const diffHrs = Math.round(diffMins / 60);
-    if (diffHrs < 24) return `${diffHrs}h ago`;
-    return `${Math.round(diffHrs / 24)}d ago`;
+    if (diffHrs < 24) return t('notifications_h_ago', diffHrs);
+    return t('notifications_d_ago', Math.round(diffHrs / 24));
   };
 
   return (
@@ -55,23 +57,23 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
       <div className="p-6 border-b border-stone-200 bg-[#FAF7F2] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bell className="w-5 h-5 text-stone-900" />
-          <h2 className="font-editorial-serif text-xl font-bold text-stone-900">Notifications</h2>
+          <h2 className="font-editorial-serif text-xl font-bold text-stone-900">{t('notifications')}</h2>
           {unreadCount > 0 && (
             <span className="bg-[#1A1A1A] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">
-              {unreadCount} New
+              {unreadCount} {t('notifications_new')}
             </span>
           )}
         </div>
         <div className="flex items-center gap-4">
           {unreadCount > 0 && (
-            <button 
+            <button
               onClick={onMarkAllAsRead}
               className="text-[10px] font-bold uppercase tracking-wider text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
             >
-              Mark all read
+              {t('notifications_mark_all_read')}
             </button>
           )}
-          <button 
+          <button
             onClick={onClose}
             className="p-1 hover:bg-stone-200 transition-colors cursor-pointer"
           >
@@ -84,13 +86,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
         {notifications.length === 0 ? (
           <div className="p-12 text-center text-stone-500 flex flex-col items-center">
             <Bell className="w-12 h-12 text-stone-200 mb-4" />
-            <p className="font-serif italic text-sm">No notifications yet.</p>
+            <p className="font-serif italic text-sm">{t('notifications_empty')}</p>
           </div>
         ) : (
           <div className="divide-y divide-stone-200">
             {notifications.map(notif => (
-              <div 
-                key={notif.id} 
+              <div
+                key={notif.id}
                 className={`p-5 flex gap-4 cursor-pointer hover:bg-stone-50 transition-colors ${notif.read ? 'bg-white opacity-70' : 'bg-[#FAF7F2]'}`}
                 onClick={() => {
                   if (!notif.read) onMarkAsRead(notif.id);
@@ -120,16 +122,16 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
           </div>
         )}
       </div>
-      
+
       <div className="p-4 border-t border-stone-200 bg-white text-center">
-        <button 
+        <button
           onClick={(e) => {
             e.preventDefault();
             if (onOpenCommunicationHub) onOpenCommunicationHub();
           }}
           className="text-[11px] text-stone-600 hover:text-stone-900 font-bold uppercase tracking-widest cursor-pointer py-2 px-4 border border-transparent hover:border-stone-300 transition-all w-full"
         >
-          View Communication Hub
+          {t('notifications_view_hub')}
         </button>
       </div>
     </div>
