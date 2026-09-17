@@ -65,7 +65,15 @@ class GeminiClient {
       },
     });
 
-    return response.text?.trim() || '';
+    // Dedicated transcription models can return text in an audioTranscription
+    // part instead of the regular text part exposed by response.text.
+    const structuredTranscript = response.candidates
+      ?.flatMap((candidate) => candidate.content?.parts || [])
+      .map((part) => part.audioTranscription?.text)
+      .filter((text): text is string => Boolean(text))
+      .join(' ');
+
+    return (structuredTranscript || response.text || '').trim();
   }
 
   public isConfigured(): boolean {
