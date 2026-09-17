@@ -9,7 +9,7 @@ import { industryService } from '../industry/industry.service';
 export interface TokenPayload {
   userId: string;
   email: string;
-  role: Role;
+  role: Role | 'GOVT_ADMIN';
   verificationStatus: VerificationStatus;
 }
 

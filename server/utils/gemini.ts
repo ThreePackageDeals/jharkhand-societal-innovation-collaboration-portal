@@ -38,11 +38,11 @@ class GeminiClient {
     if (!this.client) {
       throw new Error('Gemini client not initialized. Check your API key.');
     }
-    const response = await this.client.models.embedContent({
+    const response: any = await this.client.models.embedContent({
       model: modelName,
-      content: { parts: [{ text }] },
+      contents: [{ parts: [{ text }] }],
     });
-    return response.embedding.values;
+    return response?.embeddings?.[0]?.values ?? [];
   }
 
   public isConfigured(): boolean {

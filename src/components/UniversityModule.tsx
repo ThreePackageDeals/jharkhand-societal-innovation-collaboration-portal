@@ -74,7 +74,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
     if (universities.length === 0) {
       return (
         <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
-          No universities found in the system.
+          {t('univ.no_universities')}
         </div>
       );
     }
@@ -101,7 +101,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
         }),
       });
       const data = await res.json();
-      setProjectTitle(data.projectTitle || `Innovation Project: ${problem.title}`);
+      setProjectTitle(data.projectTitle || t('univ.ai_proposal_title', problem.title));
       setAbstract(data.abstract || '');
       setTechnologyMethodology(data.technologyMethodology || '');
       if (data.facultyMentor) {
@@ -131,7 +131,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
       }
     } catch (err) {
       console.error('Failed to generate AI proposal:', err);
-      alert('Could not run AI generator. You can draft manually.');
+      alert(t('univ.ai_generator_error'));
     } finally {
       setIsGeneratingAiProposal(false);
     }
@@ -145,13 +145,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
       setLeadFacultyName(currentHei.facultyMentors[0].name);
       setLeadFacultyDept(currentHei.facultyMentors[0].department);
     }
-    setProjectTitle(`Project ${problem.title.slice(0, 40)} Innovation`);
+    setProjectTitle(t('univ.draft_proposal_title', problem.title.slice(0, 40)));
   };
 
   const handleSubmitProposalForm = async () => {
     if (!targetProblemForProposal) return;
     if (!projectTitle.trim() || !abstract.trim()) {
-      alert('Please provide project title and abstract.');
+      alert(t('univ.proposal_required_fields'));
       return;
     }
 
@@ -168,13 +168,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
         abstract,
         technologyMethodology,
         facultyMentor: {
-          name: leadFacultyName || currentHei.facultyMentors[0]?.name || 'Dr. Lead Faculty',
+          name: leadFacultyName || currentHei.facultyMentors[0]?.name || t('univ.placeholder_faculty_lead'),
           department: leadFacultyDept || currentHei.departments[0],
           email: `${leadFacultyName.toLowerCase().replace(/\s+/g, '.')}@${currentHei.shortName.toLowerCase().replace(/[^a-z]/g, '')}.ac.in`,
         },
         studentTeam: {
-          leadName: studentLeadName || 'Student Innovation Lead',
-          leadEmail: studentLeadEmail || 'student.researcher@univ.ac.in',
+          leadName: studentLeadName || t('univ.placeholder_student_lead'),
+          leadEmail: studentLeadEmail || t('univ.placeholder_student_email'),
           membersCount: studentDepts.length + 2,
           departments: studentDepts,
         },
@@ -195,11 +195,11 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
       setTargetProblemForProposal(null);
       setActiveSubTab('proposals');
       setTimeout(() => {
-        alert('Solution Proposal submitted successfully and dispatched for Industry/CSR partnership!');
+        alert(t('univ.submit_proposal_success'));
       }, 10);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Failed to submit proposal.');
+      alert(err.message || t('univ.submit_proposal_error'));
     } finally {
       setIsSubmittingProposal(false);
     }
@@ -218,12 +218,12 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
               <span className="editorial-meta">{t('univ_portal_title')}</span>
               <span className="text-stone-600">•</span>
               <span className="text-[10px] font-mono text-stone-500 uppercase tracking-widest">
-                {currentHei.type} • Est. {currentHei.establishedYear}
+                {currentHei.type} • {t('univ.est_label')} {currentHei.establishedYear}
               </span>
             </div>
             <h2 className="font-editorial-serif italic text-2xl font-bold text-stone-900 leading-none">{currentHei.name}</h2>
             <p className="text-xs text-stone-600 font-serif italic mt-1.5">
-              {currentHei.incubationCenter} • {currentHei.district} District
+              {currentHei.incubationCenter} • {currentHei.district} {t('univ.district_label')}
             </p>
           </div>
         </div>
@@ -318,13 +318,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                       {prob.trackingCode}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF7F2] text-stone-900 border border-stone-300">
-                      Dept: {prob.assignedDepartment || currentHei.departments[0]}
+                      {t('univ.dept_label')} {prob.assignedDepartment || currentHei.departments[0]}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF7F2] text-stone-900 border border-stone-300">
                       {prob.district} • {prob.blockOrPanchayat}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-stone-200 text-stone-800">
-                      Status: {prob.status.replace(/_/g, ' ')}
+                      {t('univ.status_label')} {prob.status.replace(/_/g, ' ')}
                     </span>
                   </div>
 
@@ -339,13 +339,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
 
                   <div className="p-3 bg-[#FAF7F2] border border-stone-200 text-xs flex flex-wrap items-center justify-between gap-3 mt-3">
                     <span className="text-stone-600 font-serif italic">
-                      <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">AI Taxonomy:</strong> {prob.aiAnalysis?.subCategory}
+                      <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">{t('univ.ai_taxonomy')}</strong> {prob.aiAnalysis?.subCategory}
                     </span>
                     <span className="text-stone-600 font-serif italic">
-                      <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">Beneficiaries:</strong> {(prob.affectedPopulation || 0).toLocaleString()} citizens
+                      <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">{t('univ.beneficiaries')}</strong> {(prob.affectedPopulation || 0).toLocaleString()} citizens
                     </span>
                     <span className="text-[#BC5434] font-bold uppercase tracking-wider text-[10px]">
-                      Budget Band: {prob.aiAnalysis?.estimatedBudgetBand || '₹3.0 - ₹5.0 Lakhs'}
+                      {t('univ.budget_band')}: {prob.aiAnalysis?.estimatedBudgetBand || t('univ.budget_band_fallback')}
                     </span>
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                     </span>
                     <h3 className="font-editorial-serif italic text-2xl font-bold text-stone-900">{prop.projectTitle}</h3>
                     <div className="text-xs text-stone-600 font-serif italic mt-1">
-                      Problem: <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">{prop.problemTitle}</strong>
+                      {t('univ.problem_label')} <strong className="text-stone-900 not-italic uppercase tracking-wider text-[10px]">{prop.problemTitle}</strong>
                     </div>
                   </div>
 
@@ -404,7 +404,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                       {prop.status.replace(/_/g, ' ')}
                     </span>
                     <div className="text-sm font-bold text-stone-900 mt-2">
-                      ₹{(prop.budgetBreakdown.totalAmount / 100000).toFixed(2)} Lakhs
+                      ₹{(prop.budgetBreakdown.totalAmount / 100000).toFixed(2)} {t('univ.lakhs_suffix')}
                     </div>
                   </div>
                 </div>
@@ -424,15 +424,15 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                     <div className="editorial-meta text-stone-500 mb-1">{t('univ_student_team')}</div>
                     <div className="font-bold text-stone-900">{prop.studentTeam.leadName} (Lead)</div>
                     <div className="text-stone-600 font-serif italic mt-0.5">
-                      {prop.studentTeam.membersCount} Researchers ({prop.studentTeam.departments.join(', ')})
+                      {prop.studentTeam.membersCount} {t('univ.researchers_label')} ({prop.studentTeam.departments.join(', ')})
                     </div>
                   </div>
                   <div>
                     <div className="editorial-meta text-stone-500 mb-1">{t('univ_industry_sponsor')}</div>
                     <div className="font-bold text-[#BC5434]">
-                      {prop.industryPartnerName || 'Seeking CSR Sponsor'}
+                      {prop.industryPartnerName || t('univ.industry_sponsor_fallback')}
                     </div>
-                    <div className="text-stone-600 font-serif italic mt-0.5">IP Potential: {prop.ipPotential}</div>
+                    <div className="text-stone-600 font-serif italic mt-0.5">{t('univ.ip_potential_label')} {prop.ipPotential}</div>
                   </div>
                 </div>
 
@@ -471,7 +471,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                           </span>
                         </div>
                         <div className="font-editorial-serif font-bold text-sm leading-tight mb-1">{m.title}</div>
-                        <div className="text-[10px] font-serif italic mt-2 text-stone-600">Deliverable: {m.deliverable}</div>
+                        <div className="text-[10px] font-serif italic mt-2 text-stone-600">{t('univ.deliverable_label')} {m.deliverable}</div>
                       </div>
                     ))}
                   </div>
@@ -481,7 +481,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
 
             {heiProposals.length === 0 && (
               <div className="bg-white border border-stone-300 p-8 text-center text-stone-500 font-serif italic text-sm">
-                No solution proposals submitted yet for {currentHei.name}. Select an assigned challenge to begin drafting.
+                {t('univ.no_proposals', currentHei.name)}
               </div>
             )}
           </div>
@@ -526,7 +526,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                 type="text"
                 value={projectTitle}
                 onChange={(e) => setProjectTitle(e.target.value)}
-                placeholder="e.g. Project Jal-Amrit: Low-Cost Solar Assisted Nano-Composite De-fluoridation"
+                placeholder={t('univ.placeholder_proposal_title')}
                 className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
               />
             </div>
@@ -540,7 +540,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                 rows={3}
                 value={abstract}
                 onChange={(e) => setAbstract(e.target.value)}
-                placeholder="Summarize the core technical innovation, targeted beneficiaries, and expected outcomes..."
+                placeholder={t('univ.placeholder_proposal_abstract')}
                 className="w-full text-xs font-serif italic px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
               ></textarea>
             </div>
@@ -553,7 +553,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                 rows={4}
                 value={technologyMethodology}
                 onChange={(e) => setTechnologyMethodology(e.target.value)}
-                placeholder="1. Material synthesis and bench testing... 2. IoT telemetry integration... 3. Village deployment... 4. Handover..."
+                placeholder={t('univ.placeholder_proposal_method')}
                 className="w-full text-xs font-mono px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] focus:outline-none focus:border-[#BC5434]"
               ></textarea>
             </div>
@@ -565,7 +565,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   <Users className="w-3.5 h-3.5" />
                   <span>{t('univ_innovation_team')}</span>
                 </span>
-                <span className="text-stone-500 font-serif italic lowercase tracking-normal mt-1 sm:mt-0">NEP 2020 Capstone / Experiential Learning</span>
+                <span className="text-stone-500 font-serif italic lowercase tracking-normal mt-1 sm:mt-0">{t('univ.nep_capstone_label')}</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -575,7 +575,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                     type="text"
                     value={leadFacultyName}
                     onChange={(e) => setLeadFacultyName(e.target.value)}
-                    placeholder="Dr. Mentor Name"
+                    placeholder={t('univ.placeholder_mentor')}
                     className="w-full text-xs px-3 py-2 border border-stone-300 bg-white"
                   />
                 </div>
@@ -585,20 +585,20 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                     type="text"
                     value={studentLeadName}
                     onChange={(e) => setStudentLeadName(e.target.value)}
-                    placeholder="Student Lead Name"
+                    placeholder={t('univ.placeholder_student')}
                     className="w-full text-xs px-3 py-2 border border-stone-300 bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1.5">NEP Academic Credits</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1.5">{t('univ.nep_credits_label')}</label>
                   <select
                     value={nepCredits}
                     onChange={(e) => setNepCredits(Number(e.target.value))}
                     className="w-full text-xs px-3 py-2 border border-stone-300 bg-[#FAF7F2] font-bold text-stone-900"
                   >
-                    <option value={4}>4 Credits (Minor Social Practicum)</option>
-                    <option value={6}>6 Credits (Final Year Capstone Project)</option>
-                    <option value={8}>8 Credits (Master Thesis / Innovation Fellowship)</option>
+                    <option value={4}>{t('univ.nep_credit_option_4')}</option>
+                    <option value={6}>{t('univ.nep_credit_option_6')}</option>
+                    <option value={8}>{t('univ.nep_credit_option_8')}</option>
                   </select>
                 </div>
               </div>
@@ -612,13 +612,13 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   <span>{t('univ_budget_breakdown')}</span>
                 </span>
                 <span className="text-[#BC5434] font-bold mt-1 sm:mt-0">
-                  Total: ₹{((hardwareBudget + prototypingBudget + fieldTestingBudget + travelBudget + contingencyBudget) / 100000).toFixed(2)} Lakhs
+                  {t('univ.budget_total_label')} ₹{((hardwareBudget + prototypingBudget + fieldTestingBudget + travelBudget + contingencyBudget) / 100000).toFixed(2)} {t('univ.lakhs_suffix')}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">Hardware</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">{t('univ.budget_hardware')}</label>
                   <input
                     type="number"
                     value={hardwareBudget}
@@ -627,7 +627,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">Prototype</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">{t('univ.budget_prototype')}</label>
                   <input
                     type="number"
                     value={prototypingBudget}
@@ -636,7 +636,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">Trials</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">{t('univ.budget_trials')}</label>
                   <input
                     type="number"
                     value={fieldTestingBudget}
@@ -645,7 +645,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">Travel</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">{t('univ.budget_travel')}</label>
                   <input
                     type="number"
                     value={travelBudget}
@@ -654,7 +654,7 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">Contingency</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 text-center">{t('univ.budget_contingency')}</label>
                   <input
                     type="number"
                     value={contingencyBudget}
@@ -675,10 +675,10 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
                 onChange={(e) => setIpPotential(e.target.value as any)}
                 className="w-full text-xs px-3 py-2.5 border border-stone-300 bg-white"
               >
-                <option value="Patentable Technology">Patentable Technology (Novel Process / Composition)</option>
-                <option value="Open-Source Public Good">Open-Source Public Good (Frugal Community Hardware)</option>
-                <option value="Grassroots Spinoff">Grassroots Startup Spinoff (Student Led Venture)</option>
-                <option value="Process Copyright">Process Copyright / Digital Platform</option>
+                <option value="Patentable Technology">{t('univ.ip_option_patent')}</option>
+                <option value="Open-Source Public Good">{t('univ.ip_option_opensource')}</option>
+                <option value="Grassroots Spinoff">{t('univ.ip_option_startup')}</option>
+                <option value="Process Copyright">{t('univ.ip_option_copyright')}</option>
               </select>
             </div>
           </div>

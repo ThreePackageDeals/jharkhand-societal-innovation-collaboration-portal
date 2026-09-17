@@ -3,6 +3,8 @@ import { authService, TokenPayload } from '../modules/auth/auth.service';
 import { sendError } from '../utils/apiResponse';
 import { Role, VerificationStatus } from '@prisma/client';
 
+type CompatRole = Role | 'GOVT_ADMIN';
+
 export interface AuthRequest extends Request {
   user?: TokenPayload;
 }
@@ -13,7 +15,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     req.user = {
       userId: 'dev-user-id',
       email: 'dev@localhost',
-      role: 'GOVT_ADMIN' as Role,
+      role: 'GOVT_ADMIN' as CompatRole,
       verificationStatus: 'NOT_REQUIRED' as VerificationStatus,
     };
     return next();
@@ -36,7 +38,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
   }
 };
 
-export const requireRole = (...allowedRoles: Role[]) => {
+export const requireRole = (...allowedRoles: CompatRole[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (process.env.AUTH_BYPASS === 'true') {
       return next();

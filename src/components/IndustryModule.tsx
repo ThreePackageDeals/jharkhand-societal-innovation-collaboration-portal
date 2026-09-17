@@ -49,7 +49,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
     if (industryPartners.length === 0) {
       return (
         <div className="flex items-center justify-center py-20 text-stone-500 font-serif italic">
-          No industry partners found in the system.
+          {t('ind.no_partners')}
         </div>
       );
     }
@@ -81,10 +81,10 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
         pilotSite
       );
       setPledgingProposal(null);
-      alert(`CSR Grant of ₹${pledgeAmountLakhs} Lakhs pledged by ${currentPartner.name}! Notification sent to university team.`);
+      alert(t('ind.pledge_success', pledgeAmountLakhs.toString(), currentPartner.name));
     } catch (err) {
       console.error(err);
-      alert('Failed to record pledge. Please try again.');
+      alert(t('ind.pledge_error'));
     } finally {
       setIsSubmittingPledge(false);
     }
@@ -111,7 +111,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
 
           <div className="bg-[#FAF7F2] border border-[#BC5434] p-4 text-center md:text-right min-w-[200px]">
             <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold">{t('ind_total_pledged')}</div>
-            <div className="font-editorial-serif text-3xl font-light text-[#BC5434] mt-1">₹{totalPledgedLakhs.toFixed(1)} L</div>
+            <div className="font-editorial-serif text-3xl font-light text-[#BC5434] mt-1">₹{totalPledgedLakhs.toFixed(1)} {t('ind.lakhs_short')}</div>
             <div className="text-[10px] text-stone-500 font-serif italic mt-1">{t('ind_active_enablers', industryPartners.length.toString())}</div>
           </div>
         </div>
@@ -137,11 +137,11 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
 
         <div className="flex items-center gap-4 text-xs font-serif italic text-stone-600">
           <div>
-            Pledged by {currentPartner.name}: <strong className="font-bold text-[#BC5434] not-italic">₹{currentPartner.csrBudgetCommitted} Lakhs</strong>
+            {t('ind.pledged_by', currentPartner.name)} <strong className="font-bold text-[#BC5434] not-italic">₹{currentPartner.csrBudgetCommitted} {t('ind.lakhs_short')}</strong>
           </div>
           <div className="hidden sm:block text-stone-400">•</div>
           <div className="hidden sm:block">
-            Focus: <strong className="font-bold text-stone-900 not-italic">{currentPartner.focusDomains.slice(0, 2).join(', ')}</strong>
+            {t('ind.focus_label')} <strong className="font-bold text-stone-900 not-italic">{currentPartner.focusDomains.slice(0, 2).join(', ')}</strong>
           </div>
         </div>
       </div>
@@ -204,13 +204,13 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                 <div className="space-y-3 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#1A1A1A] text-white">
-                      HEI: {prop.heiName}
+                      {t('ind.hei_label')} {prop.heiName}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF7F2] text-stone-900 border border-stone-300">
-                      Faculty: {prop.facultyMentor.name}
+                      {t('ind.faculty_label')} {prop.facultyMentor.name}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-stone-200 text-stone-800">
-                      Credits: {prop.nepExperientialCredits}
+                      {t('ind.credits_label')} {prop.nepExperientialCredits}
                     </span>
                     {hasSponsor ? (
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-stone-100 text-stone-800 border border-stone-300 flex items-center gap-1">
@@ -226,28 +226,28 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
 
                   <h3 className="font-editorial-serif text-2xl font-bold text-stone-900 leading-snug">{prop.projectTitle}</h3>
                   <div className="text-xs text-stone-500 font-serif italic">
-                    Addressing: <span className="text-stone-900 font-bold not-italic uppercase tracking-wider text-[10px]">{prop.problemTitle}</span>
+                    {t('ind.addressing_label')} <span className="text-stone-900 font-bold not-italic uppercase tracking-wider text-[10px]">{prop.problemTitle}</span>
                   </div>
 
                   <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed font-sans">{prop.abstract}</p>
 
                   <div className="p-4 bg-[#FAF7F2] border border-stone-200 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mt-2">
                     <div>
-                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">Requirement</span>
-                      <strong className="text-stone-900 font-bold">₹{totalBudgetLakhs} Lakhs</strong>
+                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">{t('ind.budget_req_label')}</span>
+                      <strong className="text-stone-900 font-bold">₹{totalBudgetLakhs} {t('ind.lakhs_short')}</strong>
                     </div>
                     <div>
-                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">Team</span>
-                      <strong className="text-stone-900">{prop.studentTeam.membersCount} Members</strong>
+                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">{t('ind.team_label')}</span>
+                      <strong className="text-stone-900">{prop.studentTeam.membersCount} {t('ind.members_label')}</strong>
                     </div>
                     <div>
-                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">IP</span>
+                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">{t('ind.ip_label')}</span>
                       <strong className="text-stone-900">{prop.ipPotential}</strong>
                     </div>
                     <div>
-                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">Milestones</span>
+                      <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider mb-1">{t('ind.milestones_label')}</span>
                       <strong className="text-[#BC5434]">
-                        {prop.milestones.filter((m) => m.status === 'completed').length}/{prop.milestones.length} Done
+                        {prop.milestones.filter((m) => m.status === 'completed').length}/{prop.milestones.length} {t('ind.milestones_done')}
                       </strong>
                     </div>
                   </div>
@@ -265,8 +265,8 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                     </button>
                   ) : (
                     <div className="p-4 bg-[#FAF7F2] border border-[#BC5434] text-stone-900 text-center">
-                      <div className="font-bold uppercase tracking-widest text-[11px]">Active Co-Development</div>
-                      <div className="text-[10px] text-stone-600 font-serif italic mt-1.5">CSR MoU & Pilot Trials Active</div>
+                      <div className="font-bold uppercase tracking-widest text-[11px]">{t('ind.active_co_dev')}</div>
+                      <div className="text-[10px] text-stone-600 font-serif italic mt-1.5">{t('ind.csr_mou_active')}</div>
                     </div>
                   )}
 
@@ -299,7 +299,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                     {partner.type}
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#BC5434]">
-                    Pledged: ₹{partner.csrBudgetCommitted} L
+                    {t('ind.pledged_label')} ₹{partner.csrBudgetCommitted} {t('ind.lakhs_short')}
                   </span>
                 </div>
                 <h4 className="font-editorial-serif text-2xl font-bold text-stone-900 mb-1">{partner.name}</h4>
@@ -307,15 +307,15 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
 
                 <div className="space-y-3 text-xs text-stone-600">
                   <div className="flex flex-col">
-                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">Thematic Focus Areas</strong>
+                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">{t('ind.thematic_focus')}</strong>
                     <span className="font-serif italic">{partner.focusDomains.join(' • ')}</span>
                   </div>
                   <div className="flex flex-col">
-                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">Technical Mentors</strong>
-                    <span className="font-serif italic">{partner.availableMentors} Experts Available</span>
+                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">{t('ind.technical_mentors')}</strong>
+                    <span className="font-serif italic">{partner.availableMentors} {t('ind.experts_available')}</span>
                   </div>
                   <div className="flex flex-col">
-                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">Pilot Testbeds</strong>
+                    <strong className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-0.5">{t('ind.pilot_testbeds')}</strong>
                     <span className="font-serif italic">{partner.pilotTestSites.join(' • ')}</span>
                   </div>
                 </div>

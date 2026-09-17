@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { 
-  MessageSquare, 
-  Search, 
-  Users, 
-  Building2, 
-  GraduationCap, 
+import {
+  MessageSquare,
+  Search,
+  Users,
+  Building2,
+  GraduationCap,
   FileText,
   Clock,
   ArrowRight,
   Bell
 } from 'lucide-react';
 import { SystemNotification, ProblemStatement, SubmitterRole } from '../types';
+import { useLanguage } from '../LanguageContext';
 
 interface CommunicationHubProps {
   notifications: SystemNotification[];
@@ -26,6 +27,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
   userRole,
   onViewProblemDetails
 }) => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const [activeSubTab, setActiveSubTab] = useState<'inbox' | 'discussions'>(
@@ -47,10 +49,10 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
   // Map user role for UI
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'citizen': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: 'Citizen / PRI' };
-      case 'university': return { bg: 'bg-[#FAF7F2] text-stone-900 border-stone-300', label: 'University / Faculty' };
-      case 'industry': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: 'Industry / CSR' };
-      case 'admin': return { bg: 'bg-stone-800 text-white border-stone-800', label: 'Govt. Admin' };
+      case 'citizen': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('navbar_role_citizen') };
+      case 'university': return { bg: 'bg-[#FAF7F2] text-stone-900 border-stone-300', label: t('navbar_role_university') };
+      case 'industry': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('navbar_role_industry') };
+      case 'admin': return { bg: 'bg-stone-800 text-white border-stone-800', label: t('navbar_role_admin') };
       default: return { bg: 'bg-stone-100 text-stone-700 border-stone-300', label: role };
     }
   };
@@ -85,21 +87,21 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="editorial-meta">Communication Hub</span>
+              <span className="editorial-meta">{t('comm_hub.title')}</span>
               <span className="text-stone-600">•</span>
-              <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">Global Inbox</span>
+              <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">{t('comm_hub.global_inbox')}</span>
             </div>
             <h2 className="font-editorial-serif italic text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Lifecycle Collaboration Center
+              {t('comm_hub.center_title')}
             </h2>
             <p className="text-xs text-stone-400 font-serif italic max-w-2xl mt-2 leading-relaxed">
-              Unified communication stream bridging citizens, academia, industry partners, and government triage officers.
+              {t('comm_hub.center_desc')}
             </p>
           </div>
 
           <div className="flex items-center gap-4 bg-stone-900 border border-stone-800 p-4">
              <div className="text-right">
-                <span className="text-[10px] text-stone-400 block font-serif italic mb-1">Current Session</span>
+                <span className="text-[10px] text-stone-400 block font-serif italic mb-1">{t('comm_hub.session')}</span>
                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${badge.bg}`}>
                   {badge.label}
                 </span>
@@ -120,7 +122,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
             }`}
           >
             <Bell className="w-4 h-4 shrink-0" />
-            <span className="text-sm">System Inbox</span>
+            <span className="text-sm">{t('comm_hub.system_inbox')}</span>
             <span className="text-[10px] bg-[#BC5434] text-white px-1.5 py-0.5 rounded-full shrink-0">
               {notifications.filter(n => !n.read).length}
             </span>
@@ -135,14 +137,14 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
             }`}
           >
             <MessageSquare className="w-4 h-4 shrink-0" />
-            <span className="text-sm">Active Project Threads</span>
+            <span className="text-sm">{t('comm_hub.active_threads')}</span>
           </button>
         </div>
 
         <div className="relative w-full md:w-72">
           <input
             type="text"
-            placeholder="Search messages or projects..."
+            placeholder={t('comm_hub.search_placeholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full text-xs p-2 pl-8 border border-stone-300 bg-[#FAF7F2] text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
@@ -160,7 +162,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
             {filteredNotifications.length === 0 ? (
               <div className="p-12 text-center text-stone-500">
                 <Bell className="w-8 h-8 text-stone-300 mx-auto mb-3" />
-                <p className="text-sm font-serif italic">No messages match your search.</p>
+                <p className="text-sm font-serif italic">{t('comm_hub.no_messages')}</p>
               </div>
             ) : (
               filteredNotifications.map(notif => (
@@ -178,7 +180,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
                     </div>
                     <p className="text-xs text-stone-600 font-serif leading-relaxed mb-2">{notif.message}</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] uppercase tracking-widest font-bold text-stone-400">Target Role:</span>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-stone-400">{t('comm_hub.target_role')}</span>
                       <span className="text-[10px] border border-stone-300 bg-white px-2 py-0.5 text-stone-600">{notif.targetRole}</span>
                     </div>
                   </div>
@@ -197,7 +199,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
             {filteredProblems.length === 0 ? (
               <div className="p-12 text-center text-stone-500">
                 <MessageSquare className="w-8 h-8 text-stone-300 mx-auto mb-3" />
-                <p className="text-sm font-serif italic">No projects found.</p>
+                <p className="text-sm font-serif italic">{t('comm_hub.no_projects')}</p>
               </div>
             ) : (
               filteredProblems.map(problem => (
@@ -226,7 +228,7 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
                     onClick={() => onViewProblemDetails(problem)}
                     className="shrink-0 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#BC5434] hover:text-[#A3452B] p-2"
                   >
-                    <span>Open Thread</span>
+                    <span> {t('common.open_thread')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

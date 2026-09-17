@@ -128,7 +128,9 @@ export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistri
       return stat.challengesCount + (stat.activeProjects * 3);
     };
 
-    const maxScore = (d3.max(districtStats, (d) => getInnovationScore(d)) || 1) as number;
+    const maxScore = (
+      d3.max(districtStats as Array<{ challengesCount: number; activeProjects: number }>, (d) => getInnovationScore(d)) || 1
+    ) as number;
 
     // Create a color scale based on the combined innovation score
     const colorScale = d3.scaleSequential(d3.interpolateOranges).domain([0, maxScore * 1.2]);

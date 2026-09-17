@@ -537,11 +537,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                       onChange={(e) => setSubmitterType(e.target.value as SubmitterType)}
                       className="w-full text-xs px-3 py-2 border border-stone-300 bg-[#FAF7F2] focus:outline-none focus:border-[#BC5434]"
                     >
-                      <option value="gram_panchayat">Gram Panchayat (PRI)</option>
-                      <option value="citizen">Individual Citizen</option>
-                      <option value="community_group">Community / SHG Group</option>
-                      <option value="urban_local_body">Urban Local Body (ULB)</option>
-                      <option value="govt_agency">Government Agency / Dept</option>
+                      <option value="gram_panchayat">{t('citizen_submit_entity_gram_panchayat')}</option>
+                      <option value="citizen">{t('citizen_submit_entity_citizen')}</option>
+                      <option value="community_group">{t('citizen_submit_entity_community_group')}</option>
+                      <option value="urban_local_body">{t('citizen_submit_entity_urban_local_body')}</option>
+                      <option value="govt_agency">{t('citizen_submit_entity_govt_agency')}</option>
                     </select>
                   </div>
                   <div>

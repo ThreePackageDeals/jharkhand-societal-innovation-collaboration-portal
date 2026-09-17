@@ -21,9 +21,10 @@ import {
 } from 'lucide-react';
 import { JHARKHAND_DISTRICTS, THEMATIC_DOMAINS } from '../data/jharkhandData';
 import { DomainTheme, District, SubmitterType, ProblemStatement, AIAnalysisResult } from '../types';
+import { useLanguage } from '../LanguageContext';
 
 interface CitizenSubmissionViewProps {
-  onNavigateBack: () => void;
+  onNavigate: () => void;
   onSuccess: (newProblem: ProblemStatement) => void;
 }
 
@@ -114,9 +115,10 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
 };
 
 export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
-  onNavigateBack,
+  onNavigate,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -316,9 +318,9 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-editorial-serif text-2xl font-bold text-stone-900 tracking-tight">Submit Societal Challenge</h2>
+              <h2 className="font-editorial-serif text-2xl font-bold text-stone-900 tracking-tight">{t('citizen_submit_title')}</h2>
               <p className="text-xs text-stone-500 font-serif italic mt-1">
-                Panchayati Raj Institutions (PRIs), Urban Local Bodies (ULBs) & Citizens
+                {t('citizen_submit_subtitle')}
               </p>
             </div>
           </div>
@@ -328,7 +330,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               onClick={fillExampleChallenge}
               className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF7F2] border border-stone-300 px-3 py-1.5 text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
             >
-              Fill Example
+              {t('citizen_submit_fill_example')}
             </button>
           </div>
         </div>
@@ -338,17 +340,17 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
           <div className="bg-[#FAF7F2] px-8 py-4 border-b border-stone-200 flex flex-wrap items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-500">
             <div className={`flex items-center gap-2 ${step === 1 ? 'text-stone-900' : ''}`}>
               <span className={`w-5 h-5 flex items-center justify-center border ${step === 1 ? 'bg-[#1A1A1A] border-stone-900 text-white' : 'bg-white border-stone-300 text-stone-400'}`}>1</span>
-              <span>Challenge Essentials</span>
+              <span>{t('citizen_submit_step_1')}</span>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-300 hidden sm:block" />
             <div className={`flex items-center gap-2 ${step === 2 ? 'text-stone-900' : ''}`}>
               <span className={`w-5 h-5 flex items-center justify-center border ${step === 2 ? 'bg-[#1A1A1A] border-stone-900 text-white' : 'bg-white border-stone-300 text-stone-400'}`}>2</span>
-              <span>Evidence & Context</span>
+              <span>{t('citizen_submit_step_2')}</span>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-300 hidden sm:block" />
             <div className={`flex items-center gap-2 ${step === 3 ? 'text-[#BC5434]' : ''}`}>
               <span className={`w-5 h-5 flex items-center justify-center border ${step === 3 ? 'bg-[#BC5434] border-[#BC5434] text-white' : 'bg-white border-stone-300 text-stone-400'}`}>3</span>
-              <span>AI Evaluation Preview</span>
+              <span>{t('citizen_submit_step_3')}</span>
             </div>
           </div>
         )}
@@ -361,13 +363,13 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div className="w-16 h-16 bg-[#FAF7F2] text-stone-900 flex items-center justify-center mx-auto mb-6 border border-stone-300">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">Challenge Registered</h3>
+              <h3 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">{t('citizen_submit_success_title')}</h3>
               <p className="text-sm text-stone-600 font-serif italic max-w-md mx-auto mb-8">
-                Your problem statement has been logged into the Jharkhand State Societal Innovation Registry and routed for institutional evaluation.
+                {t('citizen_submit_success_desc')}
               </p>
 
               <div className="bg-white border border-stone-300 p-6 max-w-md mx-auto mb-8 text-left shadow-sm">
-                <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold mb-2">Permanent Tracking Code</div>
+                <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold mb-2">{t('citizen_submit_tracking_code')}</div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-mono text-xl font-bold text-[#BC5434]">{createdProblem.trackingCode}</span>
                   <button
@@ -375,21 +377,21 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#FAF7F2] px-3 py-2 border border-stone-300 hover:bg-white text-stone-700 transition-colors cursor-pointer"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
+                    <span>{copiedCode ? t('citizen_submit_copied') : t('citizen_submit_copy_code')}</span>
                   </button>
                 </div>
                 <div className="mt-4 text-[11px] uppercase tracking-wider font-bold text-stone-500 pt-3 border-t border-stone-200 flex justify-between">
                   <span>District: <strong className="text-stone-900">{createdProblem.district}</strong></span>
-                  <span>Domain: <strong className="text-stone-900">{createdProblem.domain}</strong></span>
+                  <span>Domain: <strong className="text-stone-900">{t('domain.' + createdProblem.domain)}</strong></span>
                 </div>
               </div>
 
               <div className="flex justify-center">
                 <button
-                  onClick={onNavigateBack}
+                  onClick={onNavigate}
                   className="bg-[#1A1A1A] hover:bg-black text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3.5 transition-colors cursor-pointer shadow-sm"
                 >
-                  View in Registry
+                  {t('citizen_submit_view_registry')}
                 </button>
               </div>
             </div>
@@ -399,27 +401,27 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
-                    Challenge Title <span className="text-[#BC5434]">*</span>
+                    {t('citizen_submit_title_label')} <span className="text-[#BC5434]">*</span>
                   </label>
                   <VoiceRecorderButton onTranscript={(t) => setTitle(title ? title + ' ' + t : t)} />
                 </div>
                 <input
                   id="input-challenge-title"
                   type="text"
-                  placeholder="e.g., High Fluoride Contamination in Bundu Community Borewells"
+                  placeholder={t('citizen_submit_title_placeholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
                 />
                 <p className="text-xs font-serif italic text-stone-500 mt-2">
-                  Provide a concise, specific title highlighting the problem and location.
+                  {t('citizen_submit_title_help')}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    Thematic Domain <span className="text-[#BC5434]">*</span>
+                    {t('citizen_submit_domain_label')} <span className="text-[#BC5434]">*</span>
                   </label>
                   <select
                     id="select-challenge-domain"
@@ -437,7 +439,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    Jharkhand District <span className="text-[#BC5434]">*</span>
+                    {t('citizen_submit_district_label')} <span className="text-[#BC5434]">*</span>
                   </label>
                   <select
                     id="select-challenge-district"
@@ -458,14 +460,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
-                    Block / Gram Panchayat / Ward <span className="text-[#BC5434]">*</span>
+                    {t('citizen_submit_block_label')} <span className="text-[#BC5434]">*</span>
                   </label>
                   <VoiceRecorderButton onTranscript={(t) => setBlockOrPanchayat(blockOrPanchayat ? blockOrPanchayat + ' ' + t : t)} />
                 </div>
                   <input
                     id="input-block-panchayat"
                     type="text"
-                    placeholder="e.g., Bundu Block"
+                    placeholder={t('citizen.block_placeholder')}
                     value={blockOrPanchayat}
                     onChange={(e) => setBlockOrPanchayat(e.target.value)}
                     className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -482,14 +484,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                       className="text-[#BC5434] hover:text-[#A3452B] font-bold inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
                     >
                       <MapPin className="w-3.5 h-3.5" />
-                      <span>{gpsLoading ? 'Detecting...' : gpsSuccess ? 'Detected!' : 'Detect GPS'}</span>
+                      <span>{gpsLoading ? t('citizen_submit_gps_detecting') : gpsSuccess ? t('citizen_submit_gps_detected') : t('citizen_submit_gps_detect')}</span>
                     </button>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="number"
                       step="0.0001"
-                      placeholder="Lat (e.g. 23.18)"
+                      placeholder={t('citizen.lat_placeholder')}
                       value={lat}
                       onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
                       className="text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] font-mono focus:outline-none focus:border-[#BC5434]"
@@ -497,7 +499,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     <input
                       type="number"
                       step="0.0001"
-                      placeholder="Lng (e.g. 85.58)"
+                      placeholder={t('citizen.lng_placeholder')}
                       value={lng}
                       onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
                       className="text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] font-mono focus:outline-none focus:border-[#BC5434]"
@@ -510,11 +512,11 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div className="p-6 bg-white border border-stone-300 space-y-4">
                 <div className="text-[10px] uppercase font-bold tracking-wider text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-2">
                   <ShieldCheck className="w-4 h-4 text-stone-400" />
-                  <span>Submitter Entity & Contact</span>
+                  <span>{t('citizen_submit_entity_header')}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1.5">Entity Type</label>
+                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1.5">{t('citizen_submit_entity_type')}</label>
                     <select
                       value={submitterType}
                       onChange={(e) => setSubmitterType(e.target.value as SubmitterType)}
@@ -529,12 +531,12 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500">Contact Name</label>
+                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500"> {t('citizen_submit_contact_name')}</label>
                     <VoiceRecorderButton onTranscript={(t) => setSubmitterName(submitterName ? submitterName + ' ' + t : t)} />
                   </div>
                     <input
                       type="text"
-                      placeholder="e.g. Ramu Munda"
+                      placeholder={t('citizen.name_placeholder')}
                       value={submitterName}
                       onChange={(e) => setSubmitterName(e.target.value)}
                       className="w-full text-xs px-3 py-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -542,12 +544,12 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500">Mobile Contact</label>
+                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-500"> {t('citizen_submit_contact_mobile')}</label>
                     <VoiceRecorderButton onTranscript={(t) => setContact(contact ? contact + ' ' + t : t)} />
                   </div>
                     <input
                       type="text"
-                      placeholder="+91 94311 00000"
+                      placeholder={t('citizen.mobile_placeholder')}
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
                       className="w-full text-xs px-3 py-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -560,14 +562,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
-                    Directly Affected Population
+                    {t('citizen_submit_population_label')}
                   </label>
                   <VoiceRecorderButton onTranscript={(t) => setAffectedPopulation(Number(t) || affectedPopulation)} />
                 </div>
                   <input
                     type="number"
                     min="10"
-                    placeholder="e.g., 2500"
+                    placeholder={t('citizen.pop_placeholder')}
                     value={affectedPopulation}
                     onChange={(e) => setAffectedPopulation(parseInt(e.target.value) || 0)}
                     className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -576,17 +578,17 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    Problem Urgency Level
+                    {t('citizen_submit_urgency_label')}
                   </label>
                   <select
                     value={urgency}
                     onChange={(e) => setUrgency(e.target.value as any)}
                     className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
                   >
-                    <option value="Critical">Critical (Threat to life/livelihood)</option>
-                    <option value="High">High (Significant chronic distress)</option>
-                    <option value="Medium">Medium (Seasonal economic outcomes)</option>
-                    <option value="Low">Low (Long-term infrastructure)</option>
+                    <option value="Critical">{t('citizen_submit_urgency_critical')}</option>
+                    <option value="High">{t('citizen_submit_urgency_high')}</option>
+                    <option value="Medium">{t('citizen_submit_urgency_medium')}</option>
+                    <option value="Low">{t('citizen_submit_urgency_low')}</option>
                   </select>
                 </div>
               </div>
@@ -597,14 +599,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
-                    Detailed Narrative of the Societal Challenge <span className="text-[#BC5434]">*</span>
+                    {t('citizen_submit_narrative_label')} <span className="text-[#BC5434]">*</span>
                   </label>
                   <VoiceRecorderButton onTranscript={(t) => setDescription(description ? description + '\n\n' + t : t)} />
                 </div>
                 <textarea
                   id="textarea-problem-description"
                   rows={4}
-                  placeholder="Describe the ground realities in detail: What is happening? How many hamlets/villages are affected? What are the observable signs?"
+                  placeholder={t('citizen.narrative_placeholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] font-serif italic"
@@ -614,13 +616,13 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
-                    Prior Attempts & Root Causes
+                    {t('citizen_submit_prior_attempts_label')}
                   </label>
                   <VoiceRecorderButton onTranscript={(t) => setPriorAttempts(priorAttempts ? priorAttempts + '\n\n' + t : t)} />
                 </div>
                 <textarea
                   rows={3}
-                  placeholder="Why did previous solutions fail?"
+                  placeholder={t('citizen.prior_placeholder')}
                   value={priorAttempts}
                   onChange={(e) => setPriorAttempts(e.target.value)}
                   className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] font-serif italic"
@@ -630,7 +632,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    Photo / Image Evidence
+                    {t('citizen_submit_photo_label')}
                   </label>
                   <div className="flex flex-col gap-3">
                     <div className="flex gap-2">
@@ -643,7 +645,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                       />
                       <label className="inline-flex items-center gap-1.5 bg-white border border-stone-300 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-600 hover:bg-stone-50 cursor-pointer transition-colors">
                         <Upload className="w-3 h-3" />
-                        <span>Upload</span>
+                        <span>{t('citizen_submit_photo_upload')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -655,14 +657,14 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     {mediaUrl && (
                       <div className="mt-4 relative group w-full max-w-xs">
                         <div className="h-48 border border-stone-300 bg-[#FAF7F2] flex items-center justify-center p-1 rounded-sm overflow-hidden shadow-sm">
-                          <img src={mediaUrl} alt="Evidence preview" className="h-full w-full object-cover" />
+                          <img src={mediaUrl} alt={t('citizen.photo_alt')} className="h-full w-full object-cover" />
                         </div>
                         <div className="absolute top-2 right-2">
                           <button
                             type="button"
                             onClick={handleRemoveImage}
                             className="p-1 bg-white/90 hover:bg-white text-stone-600 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
-                            title="Remove image"
+                            title={t('citizen.photo_remove')}
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -677,18 +679,18 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    Video Demonstration Link (Optional)
+                    {t('citizen_submit_video_label')}
                   </label>
                   <input
                     type="text"
-                    placeholder="YouTube / Drive / Loom link"
+                    placeholder={t('citizen.video_placeholder')}
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
                     className="w-full text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] focus:outline-none focus:border-[#BC5434]"
                   />
                   <div className="mt-3 p-4 bg-[#FAF7F2] border border-stone-300 text-xs text-stone-600 font-serif italic leading-relaxed">
-                    <strong className="not-italic text-stone-900 font-bold text-[10px] uppercase tracking-wider block mb-1">Tip</strong>
-                    Video recordings from Panchayats showing dry riverbeds, affected crops, or malfunctioning machines dramatically speed up university triage and incubation grant approvals.
+                    <strong className="not-italic text-stone-900 font-bold text-[10px] uppercase tracking-wider block mb-1">{t('citizen_submit_video_tip')}</strong>
+                    {t('citizen_submit_video_tip')}
                   </div>
                 </div>
               </div>
@@ -703,10 +705,10 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-200">
                       <div className="flex items-center gap-2 text-stone-900 font-bold uppercase tracking-widest text-[10px]">
                         <Sparkles className="w-3.5 h-3.5 text-[#BC5434]" />
-                        <span>AI Classification Report</span>
+                        <span>{t('citizen_submit_ai_report')}</span>
                       </div>
                       <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-[#FAF7F2] text-stone-900 border border-stone-300">
-                        Priority Score: {aiResult.priorityScore}/100
+                        {t('citizen_submit_ai_priority')}: {aiResult.priorityScore}/100
                       </div>
                     </div>
                     <div className="text-xs text-stone-900 mb-2 font-mono">
@@ -727,10 +729,10 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     <div className="bg-[#FAF7F2] border border-[#BC5434] p-5 mb-5 text-xs text-stone-900">
                       <div className="flex items-center gap-2 font-bold uppercase tracking-widest text-[10px] mb-2 text-stone-900">
                         <AlertCircle className="w-4 h-4 text-[#BC5434]" />
-                        <span>Similar Challenges Detected</span>
+                        <span>{t('citizen_submit_ai_sim_issues')}</span>
                       </div>
                       <p className="text-xs font-serif italic text-stone-600 mb-3">
-                        Our AI deduplication engine flagged existing submissions with overlapping causes.
+                        {t('citizen_submit_ai_sim_desc')}
                       </p>
                       <div className="space-y-2">
                         {aiResult.duplicateMatches.map((dm, idx) => (
@@ -747,7 +749,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                   <div className="mb-5">
                     <h4 className="text-[11px] font-bold uppercase tracking-widest text-stone-900 mb-3 flex items-center gap-2 border-b border-stone-200 pb-2">
                       <Building2 className="w-4 h-4 text-stone-400" />
-                      <span>Recommended Research Labs (HEIs)</span>
+                      <span>{t('citizen_submit_ai_rec_labs')}</span>
                     </h4>
                     <div className="space-y-3">
                       {aiResult.matchedHeis?.map((m, idx) => (
@@ -786,7 +788,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
               ) : (
                 <div className="text-center py-12 px-4 border border-stone-300 bg-[#FAF7F2]">
                   <p className="font-serif italic text-stone-600 mb-6 max-w-md mx-auto">
-                    Run our server-side AI evaluation to automatically categorize, detect duplicates, and match with the top university research labs in Jharkhand.
+                    {t('citizen_submit_ai_no_eval')}
                   </p>
                   <button
                     onClick={handleRunAiEvaluation}
@@ -794,7 +796,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3.5 transition-colors cursor-pointer shadow-sm"
                   >
                     {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    <span>{isAnalyzing ? 'Running AI Engine...' : 'Run AI Evaluation'}</span>
+                    <span>{isAnalyzing ? t('citizen_submit_ai_running') : t('citizen_submit_ai_run_btn')}</span>
                   </button>
                 </div>
               )}
@@ -811,7 +813,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                 onClick={() => setStep((s) => (s - 1) as any)}
                 className="text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 px-4 py-2 cursor-pointer transition-colors"
               >
-                Back
+                {t('citizen_submit_back')}
               </button>
             ) : (
               <div></div>
@@ -830,7 +832,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                   }}
                   className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white font-bold uppercase tracking-widest text-[11px] px-6 py-3 transition-colors cursor-pointer"
                 >
-                  <span>Next Step</span>
+                  <span>{t('citizen_submit_next')}</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               )}
@@ -844,7 +846,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                     className="inline-flex items-center justify-center gap-2 bg-[#FAF7F2] hover:bg-white border border-stone-300 text-stone-900 font-bold uppercase tracking-widest text-[11px] px-6 py-3 cursor-pointer disabled:opacity-50 transition-colors"
                   >
                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span>Skip & Submit</span>
+                    <span>{t('citizen_submit_skip')}</span>
                   </button>
                   <button
                     type="button"
@@ -866,7 +868,7 @@ export const CitizenSubmissionView: React.FC<CitizenSubmissionViewProps> = ({
                   className="inline-flex items-center justify-center gap-2 bg-[#BC5434] hover:bg-[#A3452B] text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  <span>Register Challenge</span>
+                  <span>{t('citizen_submit_register')}</span>
                 </button>
               )}
             </div>

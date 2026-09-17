@@ -14,7 +14,13 @@ interface ErrorBoundaryState {
  * the damage to a single recoverable error screen.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public props: ErrorBoundaryProps;
   state: ErrorBoundaryState = { error: null };
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.props = props;
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error };
@@ -25,6 +31,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   render() {
+    const { children } = this.props;
+
     if (this.state.error) {
       return (
         <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center p-8 text-center">
@@ -58,6 +66,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }

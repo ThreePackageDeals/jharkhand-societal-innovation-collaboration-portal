@@ -288,7 +288,7 @@ export const CitizenModule: React.FC<CitizenModuleProps> = ({
                           : 'bg-stone-200 text-stone-800'
                       }`}
                     >
-                      {prob.urgency} {t('citizen_urgency')}
+                      {t('urgency.' + prob.urgency)}
                     </span>
                   </div>
                 </div>
@@ -297,7 +297,7 @@ export const CitizenModule: React.FC<CitizenModuleProps> = ({
                 <div className="p-5 space-y-2.5">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-stone-500">
                     <span className="text-[#BC5434]">
-                      {(prob.domain || 'general').replace('_', ' ')}
+                      {t('domain.' + (prob.domain || 'general'))}
                     </span>
                     <span>{prob.blockOrPanchayat || ''}</span>
                   </div>

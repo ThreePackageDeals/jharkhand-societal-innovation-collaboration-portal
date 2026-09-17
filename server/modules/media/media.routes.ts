@@ -5,12 +5,13 @@ import { mediaService } from './media.service';
 const router = Router();
 
 // Configure multer for temporary storage before the service moves it
-const upload = multer({ dest: 'uploads/tmp/' });
+const upload = multer({ dest: 'uploads/tmp/' }) as any;
+const uploadSingle = upload.single.bind(upload, 'file') as any;
 
 // Ensure upload directory exists
 mediaService.init();
 
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', uploadSingle, async (req: any, res: any) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });

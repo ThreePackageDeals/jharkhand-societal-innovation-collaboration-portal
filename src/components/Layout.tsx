@@ -74,7 +74,7 @@ export function Layout() {
         <button
           onClick={() => navigate('/communication?tab=discussions')}
           className="relative p-4 bg-[#BC5434] text-white rounded-full shadow-xl hover:bg-[#A3452B] transition-all duration-200 cursor-pointer active:scale-90 group"
-          title="Community Forum"
+          title={t('layout.community_forum')}
         >
           <MessageCircle className="w-7 h-7" />
           {/* Simple pulse effect if there are unread notifications */}
@@ -86,7 +86,7 @@ export function Layout() {
           )}
           {/* Tooltip on hover */}
           <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-stone-900 text-white text-[10px] font-medium leading-tight rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-normal w-48 text-center">
-            Join multidisciplinary discussions between students, experts, and grassroots reporters.
+            {t('layout.forum_desc')}
           </span>
         </button>
       </div>
@@ -142,20 +142,20 @@ export function Layout() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-wider">
-              <span className="text-[#E07A5F]">24 Districts</span>
+              <span className="text-[#E07A5F]">{t('layout.districts_count')}</span>
               <span className="text-stone-700">•</span>
-              <span className="text-stone-300">6 Premier Jharkhand HEIs</span>
+              <span className="text-stone-300">{t('layout.premier_heis')}</span>
               <span className="text-stone-700">•</span>
-              <span className="text-stone-300">CSR MCA Section 135 Compliant</span>
+              <span className="text-stone-300">{t('layout.csr_compliant')}</span>
             </div>
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-stone-500">
             <div>
-              &copy; {new Date().getFullYear()} Department of Higher & Technical Education, Government of Jharkhand.
+              {t('layout.copyright').replace('{year}', new Date().getFullYear().toString())}
             </div>
             <div className="text-stone-400 font-serif italic">
-              Academic Nodes: BIT Mesra • IIT (ISM) Dhanbad • Birsa Agricultural University • NIT Jamshedpur • AIIMS Deoghar • Central University of Jharkhand
+              {t('layout.academic_nodes')}
             </div>
           </div>
         </div>

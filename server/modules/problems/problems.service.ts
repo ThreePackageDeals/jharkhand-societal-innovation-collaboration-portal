@@ -164,8 +164,10 @@ export class ProblemsService {
     });
 
     // Trigger Email Notification
+    const universityEmail = (university as any).email || 'admin@university.edu';
+
     emailService.sendEmail(
-      university.email || 'admin@university.edu',
+      universityEmail,
       `New Societal Challenge Assigned: ${problem.title}`,
       `Dear ${university.name} Administration,\n\nA new societal challenge from ${problem.district} has been assigned to your institution's ${department} department.\n\nTracking Code: ${problem.trackingCode}\nChallenge: ${problem.title}\n\nPlease review and assign a multidisciplinary faculty-student team.\n\nRegards,\nJharkhand State Registry`
     ).catch(err => logger.error('Failed to send assignment email:', err));
