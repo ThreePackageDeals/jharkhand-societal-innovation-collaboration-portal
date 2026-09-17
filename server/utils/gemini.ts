@@ -24,17 +24,38 @@ class GeminiClient {
     if (!this.client) {
       throw new Error('Gemini client not initialized. Check your API key.');
     }
-    const response = await this.client.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
-    return response.text || '{}';
+
+    const generate = async (model: string) => {
+      const response = await this.client!.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+      return response.text || '{}';
+    };
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await generate(modelName);
+      } catch (err: any) {
+        const status = err?.status ?? err?.error?.code;
+        const isUnavailable = status === 503 || /\"code\":503/.test(err?.message || '');
+        if (!isUnavailable || attempt === 2) {
+          throw err;
+        }
+
+        const retryDelayMs = 500 * (attempt + 1);
+        logger.warn(`Gemini model ${modelName} is temporarily unavailable; retrying in ${retryDelayMs}ms.`);
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+      }
+    }
+
+    throw new Error('Gemini generation retries were exhausted.');
   }
 
-  public async embedContent(text: string, modelName = 'text-embedding-004') {
+  public async embedContent(text: string, modelName = 'gemini-embedding-2') {
     if (!this.client) {
       throw new Error('Gemini client not initialized. Check your API key.');
     }
