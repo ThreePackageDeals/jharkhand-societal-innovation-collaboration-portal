@@ -57,11 +57,11 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   // Fetch discussions
   const loadDiscussions = async () => {
     try {
-      const res = await fetch(`/api/problems/${problemId}/discussions`);
-      if (res.ok) {
-        const data = await res.json();
-        setDiscussions(data);
-      }
+      const res = await fetch(`/api/discussions/${encodeURIComponent(problemId)}`);
+      const response = await res.json();
+      if (!res.ok) throw new Error(response?.error?.message || 'Failed to load discussions');
+      const data = response?.data ?? response;
+      setDiscussions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load discussions:', err);
     } finally {
@@ -91,18 +91,22 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         senderRole: mapCurrentRoleToSubmitterRole(),
         message: message.trim(),
       };
+      const token = localStorage.getItem('auth_token');
 
-      const res = await fetch(`/api/problems/${problemId}/discussions`, {
+      const res = await fetch('/api/discussions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ problemId, ...payload }),
       });
 
-      if (res.ok) {
-        const savedMessage = await res.json();
-        setDiscussions((prev) => [...prev, savedMessage]);
-        setMessage('');
-      }
+      const response = await res.json();
+      if (!res.ok) throw new Error(response?.error?.message || 'Failed to post discussion');
+      const savedMessage = response?.data ?? response;
+      setDiscussions((prev) => [...prev, savedMessage]);
+      setMessage('');
     } catch (err) {
       console.error('Failed to send message:', err);
       alert(t('discussion.send_error'));

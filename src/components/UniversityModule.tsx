@@ -91,16 +91,26 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
   const handleGenerateAiProposal = async (problem: ProblemStatement) => {
     setIsGeneratingAiProposal(true);
     try {
+      const token = localStorage.getItem('auth_token');
       const res = await fetch('/api/ai/generate-proposal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           problemId: problem.id,
           heiId: currentHei.id,
           customInstructions: customAiInstructions,
         }),
       });
-      const data = await res.json();
+      const response = await res.json();
+      if (!res.ok) {
+        throw new Error(response?.error?.message || 'AI proposal generation failed');
+      }
+
+      // API responses are wrapped as { success, data, ... }.
+      const data = response?.data ?? response;
       setProjectTitle(data.projectTitle || t('univ.ai_proposal_title', problem.title));
       setAbstract(data.abstract || '');
       setTechnologyMethodology(data.technologyMethodology || '');

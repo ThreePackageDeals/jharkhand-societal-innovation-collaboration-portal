@@ -309,7 +309,7 @@ Description: "${problem.description}"
 Return a strict JSON response matching the Proposal schema...`;
 
       const rawText = await gemini.generateContent(prompt);
-      return JSON.parse(rawText);
+      return this.normalizeProposalDraft(JSON.parse(rawText), problem, hei);
     } catch (err: any) {
       logger.error('AI proposal generation error:', err.message);
       return this.proposalHeuristicFallback(problem, hei);
@@ -317,9 +317,81 @@ Return a strict JSON response matching the Proposal schema...`;
   }
 
   private proposalHeuristicFallback(problem: any, hei: any) {
+    return this.normalizeProposalDraft({}, problem, hei);
+  }
+
+  /**
+   * Gemini can return a valid JSON object that is still missing optional
+   * proposal sections. Keep the form usable by filling every field with a
+   * domain-aware, editable default before returning it to the client.
+   */
+  private normalizeProposalDraft(partial: any, problem: any, hei: any) {
+    const source = partial && typeof partial === 'object' ? partial : {};
+    const firstFaculty = Array.isArray(hei.facultyMentors) ? hei.facultyMentors[0] : undefined;
+    const departments = Array.isArray(hei.departments) && hei.departments.length > 0
+      ? hei.departments.slice(0, 2)
+      : ['Multidisciplinary Innovation'];
+    const emailDomain = String(hei.shortName || hei.name || 'university')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '') + '.ac.in';
+    const facultyMentor = source.facultyMentor && typeof source.facultyMentor === 'object'
+      ? source.facultyMentor
+      : {};
+    const studentTeam = source.studentTeam && typeof source.studentTeam === 'object'
+      ? source.studentTeam
+      : {};
+    const sourceBudget = source.budgetBreakdown && typeof source.budgetBreakdown === 'object'
+      ? source.budgetBreakdown
+      : {};
+    const hardwareEquip = Number(sourceBudget.hardwareEquip) || 140000;
+    const prototyping = Number(sourceBudget.prototyping) || 100000;
+    const fieldTesting = Number(sourceBudget.fieldTesting) || 60000;
+    const travelAndLogistics = Number(sourceBudget.travelAndLogistics) || 40000;
+    const contingency = Number(sourceBudget.contingency) || 40000;
+    const milestones = Array.isArray(source.milestones) && source.milestones.length > 0
+      ? source.milestones
+      : [
+          { id: 'm-1', title: 'Problem Diagnosis & Design', stage: 'Ideation & Design', durationWeeks: 4, status: 'in_progress', deliverable: 'Validated requirements and design brief' },
+          { id: 'm-2', title: 'Prototype Development', stage: 'Lab Prototype', durationWeeks: 6, status: 'pending', deliverable: 'Working prototype and test report' },
+          { id: 'm-3', title: 'Community Field Trial', stage: 'Field Testing', durationWeeks: 6, status: 'pending', deliverable: 'Field results and community feedback' },
+          { id: 'm-4', title: 'Pilot Handover', stage: 'Community Pilot', durationWeeks: 4, status: 'pending', deliverable: 'Training, SOP and handover report' },
+        ];
+
     return {
-      projectTitle: `Project Samadhan: ${problem.title.slice(0, 30)}...`,
-      abstract: `A multidisciplinary initiative by ${hei.name} to solve ${problem.title}.`,
+      projectTitle: String(source.projectTitle || `Project Samadhan: ${problem.title}`),
+      abstract: String(source.abstract || `A multidisciplinary initiative by ${hei.name} to address ${problem.title} through community-led design, field validation and a scalable implementation model.`),
+      technologyMethodology: String(source.technologyMethodology || `1. Validate the challenge with community stakeholders and baseline measurements.\n2. Design and prototype a context-appropriate intervention using ${problem.domain || 'appropriate local technologies'}.\n3. Test the prototype in ${problem.blockOrPanchayat || problem.district || 'the target community'} and iterate from measured results.\n4. Document the operating model, training needs and scale-up pathway.`),
+      facultyMentor: {
+        name: (() => {
+          const generatedName = typeof facultyMentor.name === 'string' ? facultyMentor.name.trim() : '';
+          return generatedName.length >= 3
+            ? generatedName
+            : String(firstFaculty?.name || 'Faculty Innovation Lead');
+        })(),
+        department: String(facultyMentor.department || firstFaculty?.department || departments[0]),
+        email: String(facultyMentor.email || firstFaculty?.email || `faculty.office@${emailDomain}`),
+      },
+      studentTeam: {
+        leadName: String(studentTeam.leadName || 'Student Research Lead'),
+        leadEmail: String(studentTeam.leadEmail || `student.researcher@${emailDomain}`),
+        membersCount: Number(studentTeam.membersCount) || 3,
+        departments: Array.isArray(studentTeam.departments) && studentTeam.departments.length > 0
+          ? studentTeam.departments
+          : departments,
+      },
+      nepExperientialCredits: Number(source.nepExperientialCredits) || 6,
+      budgetBreakdown: {
+        hardwareEquip,
+        prototyping,
+        fieldTesting,
+        travelAndLogistics,
+        contingency,
+        totalAmount: hardwareEquip + prototyping + fieldTesting + travelAndLogistics + contingency,
+      },
+      milestones,
+      ipPotential: ['Patentable Technology', 'Open-Source Public Good', 'Process Copyright', 'Grassroots Spinoff'].includes(source.ipPotential)
+        ? source.ipPotential
+        : 'Open-Source Public Good',
     };
   }
 }
