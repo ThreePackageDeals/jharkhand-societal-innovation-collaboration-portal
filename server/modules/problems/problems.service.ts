@@ -240,8 +240,35 @@ export class ProblemsService {
         email: problem.submitterEmail,
         organization: problem.submitterOrg || undefined,
       },
+      aiAnalysis: problem.aiAnalysis
+        ? {
+            ...problem.aiAnalysis,
+            thematicTags: this.toStringArray(problem.aiAnalysis.thematicTags),
+            recommendedTech: this.toStringArray(problem.aiAnalysis.recommendedTech),
+          }
+        : null,
       mediaUrls: problem.mediaAttachments?.map((attachment: { url: string }) => attachment.url) || [],
     };
+  }
+
+  /** Accept current JSON arrays as well as legacy JSON-string seed values. */
+  private toStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string');
+    }
+
+    if (typeof value === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(value);
+        return Array.isArray(parsed)
+          ? parsed.filter((item): item is string => typeof item === 'string')
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
   }
 }
 
