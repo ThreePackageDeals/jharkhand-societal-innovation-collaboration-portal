@@ -2,7 +2,7 @@ import { AudioTranscriptionConfigMode, GoogleGenAI } from '@google/genai';
 import { ENV } from '../config/env';
 import { logger } from './logger';
 
-class AIClient {
+export class AIClient {
   private client: GoogleGenAI | null = null;
 
   constructor() {
@@ -94,7 +94,44 @@ class AIClient {
       .filter((text): text is string => Boolean(text))
       .join(' ');
 
-    return (structuredTranscript || response.text || '').trim();
+    const transcript = (structuredTranscript || response.text || '').trim();
+    return transcript ? this.translateSpeechToEnglish(transcript) : '';
+  }
+
+  /**
+   * Gemini's transcription model intentionally returns what it hears, which
+   * may be Hindi, another local language, or a phonetic Latin transliteration.
+   * Challenge fields are stored and processed in English, so normalize that
+   * speech before it reaches the client.
+   */
+  private async translateSpeechToEnglish(transcript: string): Promise<string> {
+    if (!this.client) return transcript;
+
+    try {
+      const response = await this.client.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: `Translate the following voice transcription into clear, natural English for a Jharkhand community challenge form.
+
+Rules:
+- Detect the source language yourself. It may be Hindi, Santali, Bengali, Urdu, or another Indian language, written in its native script or phonetically in Latin characters.
+- Translate the meaning; never return a pronunciation, transliteration, or explanation.
+- Preserve names, official place names, addresses, measurements, and phone numbers as faithfully as possible.
+- Keep the wording concise and appropriate for a form field.
+- If it is already English, return it unchanged except for obvious punctuation or grammar cleanup.
+- Return only the final English text, with no quotes, labels, or commentary.
+
+Voice transcription:
+${transcript}`,
+        config: { responseMimeType: 'text/plain' },
+      });
+
+      return (response.text || transcript).trim();
+    } catch (error: any) {
+      // Do not discard a valid transcription if the optional translation pass
+      // is briefly unavailable; the user can still edit the field manually.
+      logger.warn(`Voice translation failed; returning the original transcript: ${error.message}`);
+      return transcript;
+    }
   }
 
   public async verifyImage(

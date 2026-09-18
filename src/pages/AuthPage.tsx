@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
-import { Role, VerificationStatus } from '../types';
+import { Role } from '../types';
 import { User, GraduationCap, Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
 type AuthStep = 'ROLE_SELECTION' | 'CREDENTIALS' | 'ONBOARDING' | 'COMPLETING';
+type OtpStatus = 'idle' | 'sent' | 'verified';
 
 export const AuthPage = () => {
   const [step, setStep] = useState<AuthStep>('ROLE_SELECTION');
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [otpStatus, setOtpStatus] = useState<{ email: OtpStatus; phone: OtpStatus }>({ email: 'idle', phone: 'idle' });
+  const [registrationToken, setRegistrationToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, completeProfile, bypassLogin, logout } = useAuth();
   const { t } = useLanguage();
@@ -19,6 +25,23 @@ export const AuthPage = () => {
 
   // Determine the redirect path: either the one saved in state or the root
   const from = location.state?.from?.pathname || '/';
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const googleToken = params.get('google_token');
+    const googleError = params.get('google_error');
+    if (!googleToken && !googleError) return;
+
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    if (googleError) {
+      alert(googleError);
+      return;
+    }
+
+    void login(googleToken!).then(() => navigate(from, { replace: true })).catch((err) => {
+      alert(err instanceof Error ? err.message : 'Google sign-in failed');
+    });
+  }, [from, location.search, login, navigate]);
 
   const roles = [
     { id: 'CITIZEN' as Role, label: t('auth.role_citizen_label'), icon: User, description: t('auth.role_citizen_desc') },
@@ -29,19 +52,56 @@ export const AuthPage = () => {
 
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);
+    setOtpStatus({ email: 'idle', phone: 'idle' });
+    setRegistrationToken('');
     setStep('CREDENTIALS');
   };
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendOtp = async (identifier: string, channel: 'email' | 'phone') => {
+    if (!identifier.trim()) return alert(`Enter your ${channel === 'email' ? 'email address' : 'phone number'} first.`);
     setIsLoading(true);
-
-    // SIMULATED AUTH: In reality, this would be a Supabase call
-    setTimeout(async () => {
-      await login('mock-jwt-token');
-      setStep('ONBOARDING');
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message || 'Unable to send verification code');
+      setOtpStatus((current) => ({ ...current, [channel]: 'sent' }));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const verifyOtp = async (identifier: string, otp: string, channel: 'email' | 'phone') => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, otp, registrationToken: registrationToken || undefined }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message || 'Unable to verify code');
+      setRegistrationToken(result.data.registrationToken);
+      setOtpStatus((current) => ({ ...current, [channel]: 'verified' }));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpStatus.email === 'verified' && otpStatus.phone === 'verified' && registrationToken) {
+      setStep('ONBOARDING');
+      return;
+    }
+    alert('Verify both your email and phone number before continuing.');
   };
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
@@ -54,7 +114,7 @@ export const AuthPage = () => {
       email,
       role: selectedRole,
       fullName: formData.get('fullName'),
-      phone: formData.get('phone'),
+      phone,
       district: formData.get('district'),
     };
 
@@ -76,8 +136,12 @@ export const AuthPage = () => {
     }
 
     try {
-      await completeProfile(profileData);
-      navigate(from, { replace: true });
+      const result = await completeProfile(profileData, registrationToken);
+      if (result.sheerIdVerificationUrl) {
+        window.location.assign(result.sheerIdVerificationUrl);
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
       const msg = (err?.message || '').toLowerCase();
       // A document/verification error means the elevated login session must be
@@ -148,6 +212,18 @@ export const AuthPage = () => {
               <h1 className="font-editorial-serif text-4xl font-bold text-stone-900 tracking-tight mb-2">{t('auth.signin')}</h1>
               <p className="text-stone-500 text-sm font-serif italic">{t('auth.signin_desc')}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => window.location.assign('/api/auth/google')}
+              className="w-full p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
+            >
+              {t('auth.google_oauth')}
+            </button>
+            <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+              <span className="h-px flex-1 bg-stone-200" />
+              <span>or register with OTP</span>
+              <span className="h-px flex-1 bg-stone-200" />
+            </div>
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.email_label')}</label>
@@ -156,21 +232,72 @@ export const AuthPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={otpStatus.email === 'verified'}
                   className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
                   placeholder={t('auth.email_placeholder')}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <button type="button" className="p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors flex items-center justify-center text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer">
-                  {t('auth.google_oauth')}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => sendOtp(email, 'email')}
+                  disabled={isLoading || otpStatus.email === 'verified'}
+                  className="shrink-0 p-3 border border-stone-300 rounded-sm hover:bg-stone-50 disabled:opacity-50 text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
+                >
+                  {otpStatus.email === 'verified' ? 'Email verified' : 'Send email OTP'}
                 </button>
-                <button type="button" className="p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors flex items-center justify-center text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer">
-                  {t('auth.phone_otp')}
+                {otpStatus.email === 'sent' && (
+                  <>
+                    <input
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="6-digit code"
+                      className="min-w-0 flex-1 p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
+                    />
+                    <button type="button" onClick={() => verifyOtp(email, emailOtp, 'email')} disabled={isLoading || emailOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">Verify</button>
+                  </>
+                )}
+              </div>
+              <div className="space-y-1 pt-2">
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Mobile number</label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={otpStatus.phone === 'verified'}
+                  className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
+                  placeholder="+919876543210"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => sendOtp(phone, 'phone')}
+                  disabled={isLoading || otpStatus.phone === 'verified'}
+                  className="shrink-0 p-3 border border-stone-300 rounded-sm hover:bg-stone-50 disabled:opacity-50 text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
+                >
+                  {otpStatus.phone === 'verified' ? 'Phone verified' : 'Send SMS OTP'}
                 </button>
+                {otpStatus.phone === 'sent' && (
+                  <>
+                    <input
+                      value={phoneOtp}
+                      onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="6-digit code"
+                      className="min-w-0 flex-1 p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
+                    />
+                    <button type="button" onClick={() => verifyOtp(phone, phoneOtp, 'phone')} disabled={isLoading || phoneOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">Verify</button>
+                  </>
+                )}
               </div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || otpStatus.email !== 'verified' || otpStatus.phone !== 'verified'}
                 className="w-full p-3 bg-[#1A1A1A] text-white rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-black transition-colors flex items-center justify-center cursor-pointer"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : t('auth.continue')}
@@ -193,7 +320,7 @@ export const AuthPage = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.phone_label')}</label>
-                  <input name="phone" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" />
+                  <input name="phone" value={phone} readOnly className="w-full p-3 border border-stone-300 bg-stone-50 text-stone-600 text-sm" />
                 </div>
               </div>
               <div className="space-y-1">

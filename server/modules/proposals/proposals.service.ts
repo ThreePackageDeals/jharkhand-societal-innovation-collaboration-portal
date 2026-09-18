@@ -175,7 +175,7 @@ export class ProposalService {
         leadName: p.teamLeadName,
         leadEmail: p.teamLeadEmail,
         membersCount: p.teamMembersCount,
-        departments: p.teamDepartments || [],
+        departments: this.toStringArray(p.teamDepartments),
       },
       budgetBreakdown: {
         hardwareEquip: p.budgetHardware,
@@ -187,6 +187,29 @@ export class ProposalService {
       },
       milestones: p.milestones || [],
     };
+  }
+
+  /**
+   * `teamDepartments` is stored as JSON. Older seeded records used a JSON
+   * string, so normalize both representations before sending data to clients.
+   */
+  private toStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string');
+    }
+
+    if (typeof value === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(value);
+        return Array.isArray(parsed)
+          ? parsed.filter((item): item is string => typeof item === 'string')
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
   }
 }
 

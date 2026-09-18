@@ -183,7 +183,7 @@ async function main() {
         teamLeadName: prop.studentTeam?.leadName,
         teamLeadEmail: prop.studentTeam?.leadEmail,
         teamMembersCount: prop.studentTeam?.membersCount,
-        teamDepartments: JSON.stringify(prop.studentTeam?.departments),
+        teamDepartments: prop.studentTeam?.departments ?? [],
         budgetHardware: prop.budgetBreakdown?.hardwareEquip,
         budgetPrototyping: prop.budgetBreakdown?.prototyping,
         budgetFieldTesting: prop.budgetBreakdown?.fieldTesting,

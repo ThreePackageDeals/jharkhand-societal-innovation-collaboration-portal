@@ -30,7 +30,14 @@ async function startServer() {
   // Set development mode for prototype testing (bypasses auth middleware)
   process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-  app.use(express.json({ limit: '20mb' }));
+  app.use(express.json({
+    limit: '20mb',
+    verify: (req, _res, buffer) => {
+      if (req.url === '/api/auth/verify-sheerid') {
+        (req as typeof req & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+      }
+    },
+  }));
 
   // Rate limiting on API routes
   app.use('/api', rateLimiter({ windowMs: 60_000, maxRequests: 200 }));

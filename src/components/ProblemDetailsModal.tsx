@@ -18,6 +18,7 @@ import {
 import { useLanguage } from '../LanguageContext';
 import { ProblemStatement, SolutionProposal } from '../types';
 import { DiscussionThread } from './DiscussionThread';
+import { ProblemLocationMap } from './ProblemLocationMap';
 
 interface ProblemDetailsModalProps {
   problem: ProblemStatement | null;
@@ -39,6 +40,7 @@ export const ProblemDetailsModal: React.FC<ProblemDetailsModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<'overview' | 'ai-dossier' | 'proposal' | 'discussions'>('overview');
   const [upvoting, setUpvoting] = useState(false);
+  const hasMappedLocation = Number.isFinite(problem.locationCoords?.lat) && Number.isFinite(problem.locationCoords?.lng);
 
   const handleUpvote = async () => {
     setUpvoting(true);
@@ -205,6 +207,14 @@ export const ProblemDetailsModal: React.FC<ProblemDetailsModalProps> = ({
                   <div className="text-[11px] text-[#BC5434] font-bold uppercase tracking-wider mt-0.5">{problem.urgency} Urgency</div>
                 </div>
               </div>
+
+              {hasMappedLocation && (
+                <ProblemLocationMap
+                  latitude={problem.locationCoords.lat}
+                  longitude={problem.locationCoords.lng}
+                  label={problem.locationCoords.address || `${problem.blockOrPanchayat}, ${problem.district}`}
+                />
+              )}
             </div>
           )}
 

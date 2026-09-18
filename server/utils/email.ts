@@ -42,6 +42,14 @@ export class EmailService {
       throw error;
     }
   }
+
+  async sendOtpEmail(to: string, otp: string) {
+    return this.sendEmail(
+      to,
+      'Your Jharkhand Innovation Portal verification code',
+      `Your verification code is ${otp}. It expires in 10 minutes. Do not share this code with anyone.`,
+    );
+  }
 }
 
 export const emailService = new EmailService();

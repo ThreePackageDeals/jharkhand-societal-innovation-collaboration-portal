@@ -30,7 +30,7 @@ export class ProblemsService {
       ];
     }
 
-    return await prisma.problem.findMany({
+    const problems = await prisma.problem.findMany({
       where,
       include: {
         aiAnalysis: true,
@@ -38,10 +38,11 @@ export class ProblemsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return problems.map((problem) => this.mapProblem(problem));
   }
 
   async getProblemById(idOrCode: string) {
-    return await prisma.problem.findFirst({
+    const problem = await prisma.problem.findFirst({
       where: {
         OR: [
           { id: idOrCode },
@@ -53,6 +54,7 @@ export class ProblemsService {
         mediaAttachments: true,
       },
     });
+    return problem ? this.mapProblem(problem) : null;
   }
 
   async upvoteProblem(id: string) {
@@ -128,7 +130,7 @@ export class ProblemsService {
         : 'Measurable improvement in community wellbeing',
     };
 
-    return await prisma.problem.create({
+    const problem = await prisma.problem.create({
       data: {
         id,
         trackingCode,
@@ -177,6 +179,7 @@ export class ProblemsService {
         mediaAttachments: true,
       },
     });
+    return this.mapProblem(problem);
   }
 
   async assignToHei(id: string, heiId: string, department: string) {
@@ -216,6 +219,29 @@ export class ProblemsService {
       where: { id },
       data: updates,
     });
+  }
+
+  /** Convert database column names into the frontend's problem contract. */
+  private mapProblem(problem: any) {
+    const hasCoordinates = Number.isFinite(problem.locationLat) && Number.isFinite(problem.locationLng);
+    return {
+      ...problem,
+      locationCoords: hasCoordinates
+        ? {
+            lat: problem.locationLat,
+            lng: problem.locationLng,
+            address: problem.locationAddress || undefined,
+          }
+        : undefined,
+      submittedBy: {
+        name: problem.submitterName,
+        type: problem.submitterType,
+        contact: problem.submitterContact,
+        email: problem.submitterEmail,
+        organization: problem.submitterOrg || undefined,
+      },
+      mediaUrls: problem.mediaAttachments?.map((attachment: { url: string }) => attachment.url) || [],
+    };
   }
 }
 

@@ -20,7 +20,11 @@ interface AuthContextType {
   bypassLogin: () => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
-  completeProfile: (data: any) => Promise<{ success: boolean; verificationStatus: VerificationStatus }>;
+  completeProfile: (data: any, registrationToken: string) => Promise<{
+    success: boolean;
+    verificationStatus: VerificationStatus;
+    sheerIdVerificationUrl?: string;
+  }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,15 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Dev-mode session handling: a full page reload starts a *fresh* session.
-  // Clear any persisted token on boot so the auth page shows again on every
-  // refresh instead of silently re-authenticating from localStorage. Login /
-  // Dev Bypass still work within the current page session.
+  // Restore a real authenticated session after a page refresh or a return from
+  // the hosted SheerID verification portal.
   useEffect(() => {
-    localStorage.removeItem('auth_token');
-    setUser(null);
-    setIsLoading(false);
-  }, []);
+    void refreshUser();
+  }, [refreshUser]);
 
   const login = async (token: string) => {
     localStorage.setItem('auth_token', token);
@@ -88,14 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const completeProfile = async (data: any) => {
-    const token = localStorage.getItem('auth_token');
+  const completeProfile = async (data: any, registrationToken: string) => {
     try {
       const res = await fetch('/api/auth/complete-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${registrationToken}`,
         },
         body: JSON.stringify(data),
       });
@@ -104,10 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(err.error?.message || 'Failed to complete profile');
       }
       const result = await res.json();
+      localStorage.setItem('auth_token', result.data.accessToken);
       await refreshUser();
       return {
         success: true,
-        verificationStatus: result.data.verificationStatus
+        verificationStatus: result.data.verificationStatus,
+        sheerIdVerificationUrl: result.data.sheerIdVerificationUrl,
       };
     } catch (err: any) {
       console.error('Profile completion error:', err);

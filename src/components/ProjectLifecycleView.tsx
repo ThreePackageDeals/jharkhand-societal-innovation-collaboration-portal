@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { SolutionProposal, ProblemStatement, InnovationStage } from '../types';
 import { useLanguage } from '../LanguageContext';
+import { ProblemLocationMap } from './ProblemLocationMap';
 
 interface ProjectLifecycleViewProps {
   proposals: SolutionProposal[];
@@ -206,6 +207,15 @@ export const ProjectLifecycleView: React.FC<ProjectLifecycleViewProps> = ({
                 </button>
               )}
             </div>
+
+            {linkedProblem && Number.isFinite(linkedProblem.locationCoords?.lat) && Number.isFinite(linkedProblem.locationCoords?.lng) && (
+              <ProblemLocationMap
+                latitude={linkedProblem.locationCoords.lat}
+                longitude={linkedProblem.locationCoords.lng}
+                label={linkedProblem.locationCoords.address || `${linkedProblem.blockOrPanchayat}, ${linkedProblem.district}`}
+                compact
+              />
+            )}
 
             {/* Milestones Checklist & Evidence */}
             <div>

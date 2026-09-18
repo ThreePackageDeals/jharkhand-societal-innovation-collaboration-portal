@@ -245,7 +245,7 @@ export const CitizenModule: React.FC<CitizenModuleProps> = ({
       </div>
 
       <div className="text-xs font-serif italic text-stone-600 text-right">
-        {t('citizen_showing_count').replace('%', filteredProblems.length.toString())}
+        {t('citizen_showing_count', filteredProblems.length)}
       </div>
 
       {/* Problem Cards Grid */}

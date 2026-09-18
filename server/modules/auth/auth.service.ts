@@ -1,10 +1,10 @@
+import { randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../../config/env';
-import { logger } from '../../utils/logger';
 import { prisma } from '../../config/db';
 import { Role, VerificationStatus, OrgType } from '@prisma/client';
-import { universityService } from '../universities/universities.service';
-import { industryService } from '../industry/industry.service';
+import { sheerIdService } from '../../services/sheerid.service';
+import { otpService } from '../../services/otp.service';
 
 export interface TokenPayload {
   userId: string;
@@ -13,7 +13,46 @@ export interface TokenPayload {
   verificationStatus: VerificationStatus;
 }
 
+interface RegistrationTokenPayload {
+  purpose: 'registration';
+  email?: string;
+  phone?: string;
+  userId?: string;
+}
+
 export class AuthService {
+  async sendOtp(identifier: string) {
+    return otpService.sendOtp(identifier);
+  }
+
+  async verifyOtp(identifier: string, otp: string, registrationToken?: string) {
+    const verification = await otpService.verifyOtp(identifier, otp);
+    if (!verification.valid) return { valid: false };
+    return {
+      valid: true,
+      ...this.recordOtpVerification(registrationToken, verification.identifier, verification.channel),
+    };
+  }
+
+  createGoogleOAuthState() {
+    return jwt.sign({ purpose: 'google-oauth', nonce: randomUUID() }, ENV.JWT_SECRET, { expiresIn: '10m' });
+  }
+
+  verifyGoogleOAuthState(state: string) {
+    try {
+      const payload = jwt.verify(state, ENV.JWT_SECRET) as { purpose?: string };
+      return payload.purpose === 'google-oauth';
+    } catch {
+      return false;
+    }
+  }
+
+  async loginWithGoogle(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.isActive) throw new Error('No active portal account is registered for this Google email');
+    return this.issueAccessToken(user);
+  }
+
   async completeProfile(userId: string, data: {
     email: string;
     fullName: string;
@@ -57,6 +96,7 @@ export class AuthService {
 
     let verificationStatus: VerificationStatus = 'NOT_REQUIRED';
     const verificationRequests: any[] = [];
+    let sheerIdVerificationUrl: string | undefined;
 
     if (role === 'STUDENT' || role === 'FACULTY') {
       if (!rest.universityId) throw new Error('University is required for students and faculty');
@@ -66,7 +106,8 @@ export class AuthService {
       });
       if (!university) throw new Error('University not found');
 
-      const isDomainVerified = this.matchesUniversityDomain(email, university.domains);
+      const isDomainVerified = ENV.ENABLE_STUDENT_DOMAIN_FAST_TRACK
+        && this.matchesUniversityDomain(email, university.domains);
 
       if (role === 'STUDENT') {
         await prisma.studentProfile.upsert({
@@ -86,14 +127,17 @@ export class AuthService {
 
         if (!isDomainVerified) {
           verificationStatus = 'PENDING';
-          if (!rest.documentUrls || rest.documentUrls.length === 0) {
-            throw new Error('Document upload required for verification');
-          }
-          verificationRequests.push({
-            userId,
-            role,
-            documentUrls: rest.documentUrls,
-            status: 'PENDING',
+          const verification = await sheerIdService.createVerification();
+          sheerIdVerificationUrl = verification.verificationUrl;
+          await prisma.user.update({
+            where: { id: userId },
+            data: { sheerIdVerificationId: verification.verificationId },
+          });
+        } else {
+          verificationStatus = 'VERIFIED';
+          await prisma.studentProfile.update({
+            where: { userId },
+            data: { verifiedAt: new Date(), verifiedById: 'domain-fast-track' },
           });
         }
       } else { // FACULTY
@@ -185,6 +229,8 @@ export class AuthService {
     return {
       user: updatedUser,
       verificationStatus,
+      accessToken: this.issueAccessToken(updatedUser),
+      sheerIdVerificationUrl,
     };
   }
 
@@ -214,6 +260,67 @@ export class AuthService {
     if (!user) throw new Error('User not found');
 
     return user;
+  }
+
+  recordOtpVerification(existingToken: string | undefined, identifier: string, channel: 'email' | 'sms') {
+    let state: RegistrationTokenPayload = { purpose: 'registration' };
+    if (existingToken) state = this.verifyRegistrationToken(existingToken, false);
+
+    if (channel === 'email') state.email = identifier;
+    else state.phone = identifier;
+    if (state.email && state.phone && !state.userId) state.userId = randomUUID();
+
+    return {
+      registrationToken: jwt.sign(state, ENV.JWT_SECRET, { expiresIn: '15m' }),
+      emailVerified: Boolean(state.email),
+      phoneVerified: Boolean(state.phone),
+      readyForProfile: Boolean(state.userId),
+    };
+  }
+
+  verifyRegistrationToken(token: string, requireComplete = true): RegistrationTokenPayload {
+    try {
+      const payload = jwt.verify(token, ENV.JWT_SECRET) as RegistrationTokenPayload;
+      if (payload.purpose !== 'registration' || (requireComplete && (!payload.userId || !payload.email || !payload.phone))) {
+        throw new Error('Complete email and SMS verification before creating a profile');
+      }
+      return payload;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Complete email')) throw error;
+      throw new Error('Your verification session has expired. Please request new codes.');
+    }
+  }
+
+  async processSheerIdWebhook(
+    rawBody: Buffer,
+    signature: string | undefined,
+    event: { verificationId?: string; notifierEventType?: string },
+  ) {
+    if (!sheerIdService.verifyWebhookSignature(rawBody, signature)) {
+      throw new Error('Invalid SheerID webhook signature');
+    }
+    if (!event.verificationId) throw new Error('SheerID webhook is missing a verification ID');
+    if (event.notifierEventType && event.notifierEventType !== 'SUCCESS') return { updated: false };
+
+    const details = await sheerIdService.getVerificationDetails(event.verificationId);
+    if (details.lastResponse?.currentStep?.toLowerCase() !== 'success') return { updated: false };
+
+    const user = await prisma.user.findUnique({ where: { sheerIdVerificationId: event.verificationId } });
+    if (!user) return { updated: false };
+
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: user.id }, data: { verificationStatus: 'VERIFIED' } }),
+      prisma.studentProfile.update({ where: { userId: user.id }, data: { verifiedAt: new Date(), verifiedById: 'sheerid' } }),
+    ]);
+    return { updated: true };
+  }
+
+  private issueAccessToken(user: { id: string; email: string | null; role: Role; verificationStatus: VerificationStatus }) {
+    return jwt.sign(
+      { userId: user.id, email: user.email || '', role: user.role, verificationStatus: user.verificationStatus },
+      ENV.JWT_SECRET,
+      { expiresIn: '24h' },
+    );
   }
 
   private matchesUniversityDomain(email: string, domains: string[]): boolean {
