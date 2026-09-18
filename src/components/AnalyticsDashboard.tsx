@@ -16,7 +16,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
-import { AnalyticsSummary, University, ProblemStatement } from '../types';
+import { AnalyticsSummary, University, ProblemStatement, District } from '../types';
 import { THEMATIC_DOMAINS } from '../data/jharkhandData';
 import { JharkhandMap } from './JharkhandMap';
 
@@ -26,6 +26,73 @@ interface AnalyticsDashboardProps {
   problems: ProblemStatement[];
   onSelectDistrictFilter?: (district: string) => void;
 }
+
+interface SolvedProjectCard {
+  id: string;
+  trackingCode: string;
+  title: string;
+  district: District;
+  blockOrPanchayat: string;
+  assignedHeiName?: string;
+}
+
+const SAMPLE_SOLVED_PROJECTS: Array<{
+  id: string;
+  trackingCode: string;
+  titleKey: string;
+  district: District;
+  locationKey: string;
+  assignedHeiName: string;
+}> = [
+  {
+    id: 'analytics-solved-001',
+    trackingCode: 'JH-GML-2025-017',
+    titleKey: 'ana.sample_project_1_title',
+    district: 'Gumla',
+    locationKey: 'ana.sample_project_1_location',
+    assignedHeiName: 'BIT Mesra',
+  },
+  {
+    id: 'analytics-solved-002',
+    trackingCode: 'JH-SMG-2025-031',
+    titleKey: 'ana.sample_project_2_title',
+    district: 'Simdega',
+    locationKey: 'ana.sample_project_2_location',
+    assignedHeiName: 'BAU Ranchi',
+  },
+  {
+    id: 'analytics-solved-003',
+    trackingCode: 'JH-SBG-2025-044',
+    titleKey: 'ana.sample_project_3_title',
+    district: 'Sahibganj',
+    locationKey: 'ana.sample_project_3_location',
+    assignedHeiName: 'AIIMS Deoghar',
+  },
+  {
+    id: 'analytics-solved-004',
+    trackingCode: 'JH-WST-2025-052',
+    titleKey: 'ana.sample_project_4_title',
+    district: 'West Singhbhum',
+    locationKey: 'ana.sample_project_4_location',
+    assignedHeiName: 'CUJ Ranchi',
+  },
+  {
+    id: 'analytics-solved-005',
+    trackingCode: 'JH-DMK-2025-068',
+    titleKey: 'ana.sample_project_5_title',
+    district: 'Dumka',
+    locationKey: 'ana.sample_project_5_location',
+    assignedHeiName: 'NIT Jamshedpur',
+  },
+  {
+    id: 'analytics-solved-006',
+    trackingCode: 'JH-ESB-2025-079',
+    titleKey: 'ana.sample_project_6_title',
+    district: 'East Singhbhum',
+    locationKey: 'ana.sample_project_6_location',
+    assignedHeiName: 'NIT Jamshedpur',
+  },
+];
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   analytics,
@@ -48,9 +115,32 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   }, [analytics?.districtStats, selectedSortBy]);
 
   // Solved challenges
-  const solvedChallenges = React.useMemo(() => {
-    return problems.filter(p => p.status === 'closed');
-  }, [problems]);
+  const solvedChallenges = React.useMemo<SolvedProjectCard[]>(() => {
+    const liveSolvedProjects = problems
+      .filter((problem) => problem.status === 'closed')
+      .map((problem) => ({
+        id: problem.id,
+        trackingCode: problem.trackingCode,
+        title: problem.title,
+        district: problem.district,
+        blockOrPanchayat: problem.blockOrPanchayat,
+        assignedHeiName: problem.assignedHeiName,
+      }));
+
+    const liveProjectIds = new Set(liveSolvedProjects.map((project) => project.id));
+    const sampleProjects = SAMPLE_SOLVED_PROJECTS
+      .filter((project) => !liveProjectIds.has(project.id))
+      .map((project) => ({
+        id: project.id,
+        trackingCode: project.trackingCode,
+        title: t(project.titleKey),
+        district: project.district,
+        blockOrPanchayat: t(project.locationKey),
+        assignedHeiName: project.assignedHeiName,
+      }));
+
+    return [...liveSolvedProjects, ...sampleProjects];
+  }, [problems, t]);
 
   // Calculate maximum challenges for proportional bars
   const maxDistrictChallenges = Math.max(...(analytics?.districtStats || []).map((d) => d?.challengesCount || 0), 1);
