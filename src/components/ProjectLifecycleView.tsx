@@ -255,7 +255,11 @@ export const ProjectLifecycleView: React.FC<ProjectLifecycleViewProps> = ({
                         </div>
 
                         <span
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 whitespace-nowrap border ${
+                          onClick={() => {
+                            const nextStatus = isDone ? 'in_progress' : 'completed';
+                            onUpdateMilestone(activeProposal.id, m.id, nextStatus);
+                          }}
+                          className={`cursor-pointer text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 whitespace-nowrap border transition-colors hover:bg-stone-100 ${
                             isDone ? 'bg-white text-stone-900 border-stone-900' : 'bg-[#FAF7F2] text-stone-400 border-transparent'
                           }`}
                         >
