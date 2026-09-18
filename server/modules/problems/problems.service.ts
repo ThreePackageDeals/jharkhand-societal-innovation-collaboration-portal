@@ -2,6 +2,7 @@ import { prisma } from '../../config/db';
 import { ProblemStatement } from '../../../src/types';
 import { emailService } from '../../utils/email';
 import { logger } from '../../utils/logger';
+import { aiService } from '../ai/ai.service';
 
 export class ProblemsService {
   async getAllProblems(filters: {
@@ -64,6 +65,32 @@ export class ProblemsService {
   }
 
   async createProblem(data: any & { embedding?: number[] }) {
+    // 1. Mandatory image validation
+    const rawMedia = (data.mediaUrls || []).filter((u: any) => typeof u === 'string' && u.trim().length > 0);
+    if (rawMedia.length === 0) {
+      throw new Error('Image evidence is compulsory. Please upload or provide at least one photo of the problem.');
+    }
+
+    // 2. Gemini Multimodal Image Verification
+    let imageVerification = data.imageVerification;
+    if (!imageVerification) {
+      try {
+        imageVerification = await aiService.verifyImage({
+          image: rawMedia[0],
+          title: data.title,
+          description: data.description,
+          domain: data.domain,
+          district: data.district,
+        });
+      } catch (err: any) {
+        logger.warn('Gemini image verification warning during problem creation:', err.message);
+      }
+    }
+
+    if (imageVerification && imageVerification.isValid === false && imageVerification.confidence >= 75) {
+      throw new Error(`Image verification failed: ${imageVerification.relevanceExplanation || 'The uploaded photo was rejected as invalid evidence by AI verification.'}`);
+    }
+
     const year = new Date().getFullYear();
     const count = await prisma.problem.count() + 1;
     const districtCode = (data.district || 'JHK').slice(0, 3).toUpperCase();
@@ -81,20 +108,24 @@ export class ProblemsService {
       contact: '+91 94311 00000',
       email: 'citizen@jharkhand.gov.in',
     };
-    const mediaUrls = data.mediaUrls && data.mediaUrls.length > 0
-      ? data.mediaUrls
-      : ['https://images.unsplash.com/photo-1541888946425-d0fbb18086f7?auto=format&fit=crop&w=800&q=80'];
+    const mediaUrls = rawMedia;
+
+    const detectedTags = imageVerification?.detectedElements || [];
+    const baseTags = [data.domain, data.district, 'Grassroots Challenge'];
+    const combinedTags = Array.from(new Set([...baseTags, ...detectedTags]));
 
     const aiAnalysis = data.aiAnalysis || {
       category: data.domain,
       subCategory: 'Citizen Societal Need',
       priorityScore: 85,
       urgencyLevel: data.urgency || 'High',
-      thematicTags: [data.domain, data.district, 'Grassroots Challenge'],
+      thematicTags: combinedTags,
       recommendedTech: ['Low cost field prototype', 'Local community co-management'],
       nepRelevance: 'Multidisciplinary Student Project (NEP 2020)',
       estimatedBudgetBand: '₹2.0 Lakhs - ₹4.0 Lakhs',
-      socialImpactPotential: 'Measurable improvement in community wellbeing',
+      socialImpactPotential: imageVerification?.imageSummary
+        ? `Visual evidence verified (${imageVerification.imageSummary}). Measurable community wellbeing improvement.`
+        : 'Measurable improvement in community wellbeing',
     };
 
     return await prisma.problem.create({

@@ -48,7 +48,27 @@ router.post('/transcribe', async (req, res) => {
   }
 });
 
-router.post('/analyze-problem', authenticate, roleGuard('GOVT_ADMIN', 'FACULTY'), async (req, res) => {
+router.post('/verify-image', async (req, res) => {
+  try {
+    const { image, title, description, domain, district } = req.body;
+    if (!image) {
+      return sendError(res, 'Image data or URL is required for verification', 400);
+    }
+
+    const verification = await aiService.verifyImage({
+      image,
+      title,
+      description,
+      domain,
+      district,
+    });
+    sendResponse(res, verification);
+  } catch (err: any) {
+    sendError(res, err.message || 'Image verification failed');
+  }
+});
+
+router.post('/analyze-problem', async (req, res) => {
   try {
     const { title, description } = req.body;
     if (!title || !description) {

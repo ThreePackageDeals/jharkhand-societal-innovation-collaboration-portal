@@ -150,16 +150,76 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
   const [videoUrl, setVideoUrl] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
 
-  // AI Analysis result cache
+  // AI Analysis & Image Verification State
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
+  const [imageVerification, setImageVerification] = useState<{
+    isValid: boolean;
+    confidence: number;
+    imageSummary: string;
+    relevanceExplanation: string;
+    detectedElements?: string[];
+    qualityScore?: number;
+  } | null>(null);
+  const [isVerifyingImage, setIsVerifyingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [createdProblem, setCreatedProblem] = useState<ProblemStatement | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const runImageVerification = async (imgUrl: string, curTitle = title, curDesc = description, curDomain = domain, curDistrict = district) => {
+    if (!imgUrl || !imgUrl.trim()) {
+      setImageVerification(null);
+      setImageError(null);
+      return;
+    }
+
+    setIsVerifyingImage(true);
+    setImageError(null);
+    try {
+      const res = await fetch('/api/ai/verify-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: imgUrl,
+          title: curTitle,
+          description: curDesc,
+          domain: curDomain,
+          district: curDistrict,
+        }),
+      });
+
+      const responseBody = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(responseBody?.error?.message || responseBody?.error || `Verification failed (${res.status})`);
+      }
+
+      const result = responseBody?.data || responseBody;
+      setImageVerification(result);
+      if (result.isValid === false) {
+        setImageError(result.relevanceExplanation || 'AI could not verify this photo as valid evidence.');
+      } else {
+        setImageError(null);
+      }
+    } catch (err: any) {
+      console.error('Image verification error:', err);
+      setImageError(err.message || 'Image verification service error.');
+      setImageVerification(null);
+    } finally {
+      setIsVerifyingImage(false);
+    }
+  };
+
   const fillExampleChallenge = () => {
-    setTitle('Arsenic Contamination in Sahibganj Groundwater');
-    setDomain('water_resources');
-    setDistrict('Sahibganj');
-    setBlockOrPanchayat('Udhwa Block');
+    const exTitle = 'Arsenic Contamination in Sahibganj Groundwater';
+    const exDomain: DomainTheme = 'water_resources';
+    const exDistrict: District = 'Sahibganj';
+    const exBlock = 'Udhwa Block';
+    const exDesc = 'Groundwater in several panchayats of Udhwa block is highly contaminated with arsenic, leading to widespread skin lesions, digestive issues, and suspected cancer cases among the villagers. The existing hand pumps are drawing water from shallow aquifers which are severely affected.';
+    const exPrior = 'Previously, some deep tube wells were bored, but due to lack of maintenance and geological shifting, they are also showing traces of arsenic. Small household filters were distributed but filters saturated quickly and were not replaced.';
+
+    setTitle(exTitle);
+    setDomain(exDomain);
+    setDistrict(exDistrict);
+    setBlockOrPanchayat(exBlock);
     setLat(24.9667);
     setLng(87.8000);
     setSubmitterType('gram_panchayat');
@@ -167,27 +227,36 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
     setContact('+91 98765 43210');
     setAffectedPopulation(5000);
     setUrgency('Critical');
-    setDescription('Groundwater in several panchayats of Udhwa block is highly contaminated with arsenic, leading to widespread skin lesions, digestive issues, and suspected cancer cases among the villagers. The existing hand pumps are drawing water from shallow aquifers which are severely affected.');
-    setPriorAttempts('Previously, some deep tube wells were bored, but due to lack of maintenance and geological shifting, they are also showing traces of arsenic. Small household filters were distributed but filters saturated quickly and were not replaced.');
+    setDescription(exDesc);
+    setPriorAttempts(exPrior);
     setMediaUrl('');
+    setImageVerification(null);
+    setImageError(null);
   };
 
   // Image Upload Handler
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Image is too large. Please upload a file smaller than 2MB.');
+      if (file.size > 4 * 1024 * 1024) {
+        alert('Image is too large. Please upload a file smaller than 4MB.');
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setMediaUrl(reader.result as string);
+        const base64Str = reader.result as string;
+        setMediaUrl(base64Str);
+        runImageVerification(base64Str);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleRemoveImage = () => {
+    setMediaUrl('');
+    setImageVerification(null);
+    setImageError(null);
+  };
 
   // Auto-detect GPS
   const handleDetectGPS = () => {
@@ -207,7 +276,6 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
       (err) => {
         console.warn('Geolocation warning:', err.message);
         setGpsLoading(false);
-        // Default to Ranchi coordinates
         setLat(23.3441);
         setLng(85.3096);
         setGpsSuccess(true);
@@ -220,6 +288,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
   const handleRunAiEvaluation = async () => {
     if (!title.trim() || !description.trim()) {
       alert('Please fill in both the Challenge Title and Problem Description first.');
+      return;
+    }
+
+    if (!mediaUrl || !mediaUrl.trim()) {
+      alert('Image upload is compulsory. Please attach a photo showing evidence of the societal problem.');
       return;
     }
 
@@ -255,6 +328,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
 
   // Final Submit
   const handleSubmitProblem = async () => {
+    if (!mediaUrl || !mediaUrl.trim()) {
+      alert('Image upload is compulsory. Please upload a photo showing evidence of the societal problem.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const normalizedAiAnalysis = aiResult && 'category' in aiResult
@@ -284,6 +362,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
         mediaUrls: [mediaUrl],
         videoUrl: videoUrl || undefined,
         aiAnalysis: normalizedAiAnalysis,
+        imageVerification: imageVerification || undefined,
       };
 
       const res = await fetch('/api/problems', {
@@ -323,35 +402,39 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
         className="bg-white shadow-2xl border border-stone-300 max-w-3xl w-full my-8 overflow-hidden text-stone-800 animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Modal Header */}
-        <div className="bg-white px-8 py-6 flex items-center justify-between border-b border-stone-200">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#FAF7F2] border border-stone-300 flex items-center justify-center text-stone-900">
-              <FileText className="w-5 h-5" />
+        {!createdProblem && (
+          <div className="bg-white px-8 py-6 flex items-center justify-between border-b border-stone-200">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#FAF7F2] border border-stone-300 flex items-center justify-center text-stone-900">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="font-editorial-serif text-2xl font-bold text-stone-900 tracking-tight">{t('citizen_submit_title')}</h2>
+                  <p className="text-xs text-stone-500 font-serif italic mt-1">
+                    {t('citizen_submit_subtitle')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {!createdProblem && step < 3 && (
+                  <button
+                    type="button"
+                    onClick={fillExampleChallenge}
+                    className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF7F2] border border-stone-300 px-3 py-1.5 text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+                  >
+                    {t('citizen_submit_fill_example')}
+                  </button>
+                )}
+                <button
+                  id="btn-close-submission-modal"
+                  onClick={onClose}
+                  className="text-stone-400 hover:text-stone-900 p-1 transition-colors cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
-            <div>
-              <h2 className="font-editorial-serif text-2xl font-bold text-stone-900 tracking-tight">{t('citizen_submit_title')}</h2>
-              <p className="text-xs text-stone-500 font-serif italic mt-1">
-                {t('citizen_submit_subtitle')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={fillExampleChallenge}
-              className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF7F2] border border-stone-300 px-3 py-1.5 text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
-            >
-              {t('citizen_submit_fill_example')}
-            </button>
-            <button
-              id="btn-close-submission-modal"
-              onClick={onClose}
-              className="text-stone-400 hover:text-stone-900 p-1 transition-colors cursor-pointer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Step Indicator */}
         {!createdProblem && (
@@ -649,21 +732,26 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                    {t('citizen_submit_photo_label')}
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700">
+                      {t('citizen_submit_photo_label')} <span className="text-[#BC5434]">*</span>
+                    </label>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#BC5434] bg-red-50 border border-red-200 px-1.5 py-0.5">
+                      Mandatory
+                    </span>
+                  </div>
                   <div className="flex flex-col gap-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={mediaUrl}
-                        onChange={(e) => setMediaUrl(e.target.value)}
-                        placeholder="https://image-url..."
-                        className="w-full text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] focus:outline-none focus:border-[#BC5434]"
-                      />
-                      <label className="inline-flex items-center gap-1.5 bg-white border border-stone-300 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-600 hover:bg-stone-50 cursor-pointer transition-colors">
-                        <Upload className="w-3 h-3" />
-                        <span>{t('citizen_submit_photo_upload')}</span>
+                    {!mediaUrl ? (
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-stone-300 hover:border-[#BC5434] bg-[#FAF7F2] hover:bg-white p-5 transition-all cursor-pointer group text-center">
+                        <div className="w-10 h-10 rounded-full bg-white group-hover:bg-[#FAF7F2] border border-stone-300 flex items-center justify-center mb-2 text-[#BC5434] shadow-xs">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-stone-800 group-hover:text-[#BC5434]">
+                          {t('citizen_submit_photo_upload')}
+                        </span>
+                        <span className="text-[11px] font-serif italic text-stone-500 mt-1">
+                          PNG, JPG, WEBP up to 4MB (Compulsory Field Evidence)
+                        </span>
                         <input
                           type="file"
                           accept="image/*"
@@ -671,10 +759,90 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                           onChange={handleImageUpload}
                         />
                       </label>
-                    </div>
-                    {mediaUrl && (
-                      <div className="mt-3 h-32 border border-stone-300 bg-[#FAF7F2] flex items-center justify-center p-1">
-                        <img src={mediaUrl} alt="Evidence preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="relative group w-full max-w-sm">
+                          <div className="h-40 border border-stone-300 bg-[#FAF7F2] flex items-center justify-center p-1 rounded-sm overflow-hidden shadow-sm">
+                            <img src={mediaUrl} alt="Evidence preview" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="absolute top-2 right-2 flex gap-1.5">
+                            <label className="p-1.5 bg-white/95 hover:bg-white text-stone-700 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer" title="Change Photo">
+                              <Upload className="w-3.5 h-3.5 text-[#BC5434]" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageUpload}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className="p-1.5 bg-white/95 hover:bg-white text-stone-700 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
+                              title="Remove photo"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 text-white text-[9px] font-bold uppercase tracking-wider rounded-sm backdrop-blur-sm">
+                            Uploaded Evidence
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Verification Status Feedback */}
+                    {isVerifyingImage && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 flex items-center gap-2.5 text-xs text-amber-900 animate-pulse">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#BC5434]" />
+                        <span className="font-medium text-[11px]">{t('citizen_submit_photo_verifying')}</span>
+                      </div>
+                    )}
+
+                    {imageError && !isVerifyingImage && (
+                      <div className="p-3 bg-red-50 border border-red-300 text-red-900 text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{imageError}</span>
+                      </div>
+                    )}
+
+                    {!isVerifyingImage && imageVerification && (
+                      <div className={`p-3 border text-xs space-y-1.5 ${imageVerification.isValid ? 'bg-emerald-50 border-emerald-300 text-emerald-950' : 'bg-red-50 border-red-300 text-red-950'}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+                            {imageVerification.isValid ? (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-800">{t('citizen_submit_photo_verified')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                                <span className="text-red-800">{t('citizen_submit_photo_rejected')}</span>
+                              </>
+                            )}
+                          </div>
+                          <span className={`text-[9px] font-mono px-1.5 py-0.5 font-bold border ${imageVerification.isValid ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-red-100 border-red-300 text-red-800'}`}>
+                            AI: {imageVerification.confidence}%
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-serif italic leading-snug">
+                          {imageVerification.imageSummary}
+                        </p>
+                        {imageVerification.relevanceExplanation && (
+                          <p className="text-[10px] text-stone-600 leading-tight">
+                            <strong>Audit:</strong> {imageVerification.relevanceExplanation}
+                          </p>
+                        )}
+                        {imageVerification.detectedElements && imageVerification.detectedElements.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {imageVerification.detectedElements.map((elem, idx) => (
+                              <span key={idx} className="text-[9px] bg-white border border-stone-200 text-stone-700 px-1.5 py-0.2 font-mono">
+                                #{elem}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -703,6 +871,40 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
             <div className="space-y-6 px-2">
               {aiResult ? (
                 <div>
+                  {/* Photo Evidence Verification Block */}
+                  {mediaUrl && (
+                    <div className="bg-[#FAF7F2] border border-stone-300 p-4 mb-5 flex flex-col sm:flex-row gap-4 items-start">
+                      <div className="w-20 h-20 shrink-0 border border-stone-300 bg-white overflow-hidden shadow-xs">
+                        <img src={mediaUrl} alt="Evidence" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 text-xs">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <strong className="text-[11px] uppercase font-bold tracking-wider text-stone-900">
+                            AI Verified Ground Evidence
+                          </strong>
+                          {imageVerification?.confidence && (
+                            <span className="text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 font-mono font-bold">
+                              {imageVerification.confidence}% AI Validated
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-serif italic text-stone-700 leading-snug mb-2">
+                          {imageVerification?.imageSummary || 'Authentic photographic evidence attached for challenge validation.'}
+                        </p>
+                        {imageVerification?.detectedElements && (
+                          <div className="flex flex-wrap gap-1">
+                            {imageVerification.detectedElements.map((tag, i) => (
+                              <span key={i} className="text-[9px] font-mono bg-white border border-stone-200 text-stone-600 px-1.5 py-0.2">
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="bg-white border border-stone-300 p-6 mb-5 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-[#BC5434]"></div>
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-200">

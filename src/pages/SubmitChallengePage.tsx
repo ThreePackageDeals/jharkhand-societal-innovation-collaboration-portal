@@ -23,7 +23,7 @@ export default function SubmitChallengePage() {
       </div>
 
       <CitizenSubmissionView
-        onNavigateBack={() => navigate('/')}
+        onNavigate={() => navigate('/challenges')}
         onSuccess={(newProblem) => {
           const normalizedProblem = {
             ...newProblem,
@@ -36,7 +36,6 @@ export default function SubmitChallengePage() {
             .then((r) => r.json())
             .then((d) => setAnalytics(d))
             .catch(() => {});
-          navigate('/challenges');
         }}
       />
     </div>
