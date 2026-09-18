@@ -142,15 +142,25 @@ export class ProposalService {
   }
 
   async getAllProposals(filters: { problemId?: string; heiId?: string }) {
-    const where: any = {};
-    if (filters.problemId) where.problemId = filters.problemId;
-    if (filters.heiId) where.heiId = filters.heiId;
+    console.log('--- GET ALL PROPOSALS START ---');
+    console.log('Filters applied:', JSON.stringify(filters));
+    try {
+      const where: any = {};
+      if (filters.problemId) where.problemId = filters.problemId;
+      if (filters.heiId) where.heiId = filters.heiId;
 
-    const proposals = await prisma.solutionProposal.findMany({
-      where,
-      include: { milestones: true },
-    });
-    return proposals.map(p => this.mapProposal(p));
+      const proposals = await prisma.solutionProposal.findMany({
+        where,
+        include: { milestones: true },
+      });
+      console.log(`Found ${proposals.length} proposals in database`);
+      return proposals.map(p => this.mapProposal(p));
+    } catch (error: any) {
+      console.error('Error in getAllProposals:', error.message);
+      throw error;
+    } finally {
+      console.log('--- GET ALL PROPOSALS END ---');
+    }
   }
 
   private mapProposal(p: any) {

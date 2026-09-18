@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Layers,
   CheckCircle2,
+  Check,
   Clock,
   Award,
   FileCheck,
@@ -44,6 +45,16 @@ export const ProjectLifecycleView: React.FC<ProjectLifecycleViewProps> = ({
 
   const activeProposal = proposals.find((p) => p.id === selectedProposalId) || proposals[0];
   const linkedProblem = activeProposal ? problems.find((p) => p.id === activeProposal.problemId) : null;
+
+  // Fallback for projects without milestones to ensure checkboxes always appear
+  const milestonesToRender = activeProposal?.milestones && activeProposal.milestones.length > 0
+    ? activeProposal.milestones
+    : [
+        { id: 'def-1', title: 'Ideation & Diagnostic', stage: 'Ideation', durationWeeks: 4, status: 'pending', deliverable: 'Baseline report' },
+        { id: 'def-2', title: 'Lab Prototype', stage: 'Lab Prototype', durationWeeks: 4, status: 'pending', deliverable: 'Bench-scale validation' },
+        { id: 'def-3', title: 'Field Testing', stage: 'Field Testing', durationWeeks: 6, status: 'pending', deliverable: 'On-site trial report' },
+        { id: 'def-4', title: 'Community Pilot', stage: 'Community Pilot', durationWeeks: 3, status: 'pending', deliverable: 'Final handover SOP' },
+      ];
 
   // Calculate overall project completion percentage
   const getProposalProgress = (prop: SolutionProposal) => {
@@ -204,7 +215,7 @@ export const ProjectLifecycleView: React.FC<ProjectLifecycleViewProps> = ({
               </h4>
 
               <div className="space-y-3">
-                {activeProposal.milestones.map((m, idx) => {
+                {milestonesToRender.map((m, idx) => {
                   const isDone = m.status === 'completed';
                   return (
                     <div
@@ -221,11 +232,14 @@ export const ProjectLifecycleView: React.FC<ProjectLifecycleViewProps> = ({
                               const nextStatus = isDone ? 'in_progress' : 'completed';
                               onUpdateMilestone(activeProposal.id, m.id, nextStatus);
                             }}
-                            className={`mt-0.5 w-5 h-5 flex items-center justify-center cursor-pointer transition-colors border ${
-                              isDone ? 'bg-[#1A1A1A] border-stone-900 text-white' : 'border-stone-300 bg-white text-transparent'
+                            style={{ border: '2px solid #1a1a1a' }}
+                            className={`mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center cursor-pointer transition-all ${
+                              isDone
+                                ? 'bg-[#1A1A1A] text-white'
+                                : 'bg-white text-transparent hover:bg-stone-100'
                             }`}
                           >
-                            ✓
+                            <Check className="w-3.5 h-3.5" />
                           </button>
                           <div>
                             <div className="flex items-center gap-3">

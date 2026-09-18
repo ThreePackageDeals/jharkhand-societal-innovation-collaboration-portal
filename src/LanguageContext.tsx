@@ -12,8 +12,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
 
-  const t = (key: string) => {
-    return translations[language][key] || translations['en'][key] || key;
+  const t = (key: string, ...args: any[]) => {
+    let translation = translations[language][key] || translations['en'][key] || key;
+    args.forEach((arg, i) => {
+      translation = translation.replace(`%s`, String(arg));
+    });
+    return translation;
   };
 
   return (

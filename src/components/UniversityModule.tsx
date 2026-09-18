@@ -84,8 +84,8 @@ export const UniversityModule: React.FC<UniversityModuleProps> = ({
       </div>
     );
   }
-  const assignedProblems = problems.filter((p) => p.assignedHeiId === selectedHeiId);
-  const heiProposals = proposals.filter((p) => p.heiId === selectedHeiId);
+  const assignedProblems = problems.filter((p) => p.assignedHeiId === currentHei?.id);
+  const heiProposals = proposals.filter((p) => p.heiId === currentHei?.id);
 
   // Trigger server-side AI proposal generator
   const handleGenerateAiProposal = async (problem: ProblemStatement) => {

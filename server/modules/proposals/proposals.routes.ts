@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const proposals = problemId
       ? await proposalService.getProposalsByProblem(problemId as string)
-      : await proposalService.getProposalsByProblem('all'); // Not implemented in service, should be findMany
+      : await proposalService.getAllProposals({});
     sendResponse(res, proposals);
   } catch (err: any) {
     sendError(res, err.message);

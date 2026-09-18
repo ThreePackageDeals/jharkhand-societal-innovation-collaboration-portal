@@ -70,6 +70,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [universities, setUniversities] = useState<University[]>([]);
   const [industryPartners, setIndustryPartners] = useState<IndustryPartner[]>([]);
   const [proposals, setProposals] = useState<SolutionProposal[]>([]);
+  useEffect(() => {
+    console.log('Proposals state updated:', proposals.length);
+  }, [proposals]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
 
   // User & UI state
@@ -81,6 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Initial Data Fetching from server APIs
   const loadAllData = useCallback(async () => {
+    console.log('--- LOADING ALL DATA START ---');
     try {
       const results = await Promise.allSettled([
         fetchWithTimeout('/api/problems'),
@@ -95,6 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (probResult.status === 'fulfilled' && probResult.value.ok) {
         const probData = await probResult.value.json();
         const problemsData = Array.isArray(probData.data) ? probData.data : (Array.isArray(probData) ? probData : []);
+        console.log(`Loaded ${problemsData.length} problems`);
         const normalizedProblems = problemsData.map((p: any) => ({
           ...p,
           mediaUrls: p.mediaAttachments && p.mediaAttachments.length > 0
@@ -102,31 +107,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
             : p.mediaUrls || [],
         }));
         setProblems(normalizedProblems);
+      } else {
+        console.error('Failed to load problems:', probResult.status === 'rejected' ? probResult.reason : probResult.value?.status);
       }
+
       if (anaResult.status === 'fulfilled' && anaResult.value.ok) {
         const anaData = await anaResult.value.json();
         setAnalytics(anaData.data || anaData || {});
+      } else {
+        console.error('Failed to load analytics:', anaResult.status === 'rejected' ? anaResult.reason : anaResult.value?.status);
       }
+
       if (uniResult.status === 'fulfilled' && uniResult.value.ok) {
         const uniData = await uniResult.value.json();
         setUniversities(Array.isArray(uniData.data) ? uniData.data : (Array.isArray(uniData) ? uniData : []));
+      } else {
+        console.error('Failed to load universities:', uniResult.status === 'rejected' ? uniResult.reason : uniResult.value?.status);
       }
+
       if (indResult.status === 'fulfilled' && indResult.value.ok) {
         const indData = await indResult.value.json();
         setIndustryPartners(Array.isArray(indData.data) ? indData.data : (Array.isArray(indData) ? indData : []));
+      } else {
+        console.error('Failed to load industry partners:', indResult.status === 'rejected' ? indResult.reason : indResult.value?.status);
       }
+
       if (propResult.status === 'fulfilled' && propResult.value.ok) {
         const propData = await propResult.value.json();
-        setProposals(Array.isArray(propData.data) ? propData.data : (Array.isArray(propData) ? propData : []));
+        const props = Array.isArray(propData.data) ? propData.data : (Array.isArray(propData) ? propData : []);
+        console.log(`Loaded ${props.length} proposals`);
+        setProposals(props);
+      } else {
+        console.error('Failed to load proposals:', propResult.status === 'rejected' ? propResult.reason : propResult.value?.status);
       }
+
       if (notifResult.status === 'fulfilled' && notifResult.value.ok) {
         const notifData = await notifResult.value.json();
         setNotifications(Array.isArray(notifData.data) ? notifData.data : (Array.isArray(notifData) ? notifData : []));
+      } else {
+        console.error('Failed to load notifications:', notifResult.status === 'rejected' ? notifResult.reason : notifResult.value?.status);
       }
     } catch (err) {
       console.error('Fatal API fetch error:', err);
     } finally {
       setIsLoading(false);
+      console.log('--- LOADING ALL DATA END ---');
     }
   }, []);
 
@@ -141,10 +166,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setProblems((prev) =>
-          prev.map((p) => (p.id === problemId ? { ...p, upvotesCount: data.upvotesCount } : p))
+          prev.map((p) => (p.id === problemId ? { ...p, upvotesCount: data.data.upvotesCount } : p))
         );
         setSelectedProblem((prev) =>
-          prev?.id === problemId ? { ...prev, upvotesCount: data.upvotesCount } : prev
+          prev?.id === problemId ? { ...prev, upvotesCount: data.data.upvotesCount } : prev
         );
       }
     } catch (err) {
@@ -160,7 +185,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ heiId, department }),
       });
       if (res.ok) {
-        const updated = await res.json();
+        const response = await res.json();
+        const updated = response.data;
         const normalizedUpdated = {
           ...updated,
           mediaUrls: updated.mediaAttachments && updated.mediaAttachments.length > 0
@@ -169,7 +195,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         setProblems((prev) => prev.map((p) => (p.id === problemId ? normalizedUpdated : p)));
         const anaRes = await fetch('/api/analytics');
-        if (anaRes.ok) setAnalytics(await anaRes.json());
+        if (anaRes.ok) setAnalytics((await anaRes.json()).data);
       }
     } catch (err) {
       console.error(err);
@@ -189,7 +215,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const errorMessage = errorData.error?.message || errorData.message || `Failed to submit proposal: ${res.statusText}`;
         throw new Error(errorMessage);
       }
-      const saved = await res.json();
+      const response = await res.json();
+      const saved = response.data;
       setProposals((prev) => [saved, ...prev]);
       setProblems((prev) =>
         prev.map((p) => (p.id === newProposalData.problemId ? { ...p, status: 'proposal_submitted' } : p))
@@ -214,12 +241,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ proposalId, partnerId, amount, mentorName, pilotSite }),
       });
       if (res.ok) {
-        const updatedProposal = await res.json();
+        const response = await res.json();
+        const updatedProposal = response.data;
         setProposals((prev) => prev.map((p) => (p.id === proposalId ? updatedProposal : p)));
         const indRes = await fetch('/api/industry/partners');
-        if (indRes.ok) setIndustryPartners(await indRes.json());
+        if (indRes.ok) setIndustryPartners((await indRes.json()).data);
         const anaRes = await fetch('/api/analytics');
-        if (anaRes.ok) setAnalytics(await anaRes.json());
+        if (anaRes.ok) setAnalytics((await anaRes.json()).data);
       }
     } catch (err) {
       console.error(err);
@@ -239,7 +267,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }),
       });
       if (res.ok) {
-        const updated = await res.json();
+        const response = await res.json();
+        const updated = response.data;
         setProposals((prev) => prev.map((p) => (p.id === proposalId ? updated : p)));
       }
     } catch (err) {
