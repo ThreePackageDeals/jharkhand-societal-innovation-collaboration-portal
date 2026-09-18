@@ -1,7 +1,8 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Loader2, Bell, MessageCircle } from 'lucide-react';
+import { Loader2, Bell, MessageCircle, LogIn, LogOut, UserRound } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
+import { useAuth } from '../AuthContext';
 import { useAppContext } from '../AppContext';
 import { NotificationPanel } from './NotificationPanel';
 import { ProblemDetailsModal } from './ProblemDetailsModal';
@@ -9,6 +10,7 @@ import { VerificationBanner } from './VerificationBanner';
 
 export function Layout() {
   const { language, setLanguage, t } = useLanguage();
+  const { user, isLoading: isAuthLoading, logout } = useAuth();
   const navigate = useNavigate();
   const {
     isLoading,
@@ -55,8 +57,34 @@ export function Layout() {
         </div>
       </div>
 
-      {/* Global Notification Trigger */}
-      <div className="fixed top-6 right-6 z-50">
+      {/* Account and notification controls */}
+      <div className="fixed top-6 right-6 z-50 flex items-center gap-2">
+        {!isAuthLoading && (
+          user ? (
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                navigate('/auth', { replace: true });
+              }}
+              className="inline-flex items-center gap-2 border border-stone-300 bg-white px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-stone-700 shadow-md transition-colors hover:border-[#BC5434] hover:text-[#BC5434] cursor-pointer"
+              title={`Signed in as ${user.email}. Sign out`}
+            >
+              <UserRound className="h-4 w-4" />
+              <span className="hidden sm:inline">{user.fullName || 'Account'}</span>
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              className="inline-flex items-center gap-2 bg-[#1A1A1A] px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md transition-colors hover:bg-[#BC5434] cursor-pointer"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Sign in / Register</span>
+            </button>
+          )
+        )}
         <button
           onClick={() => setIsNotificationOpen(true)}
           className="relative p-3 bg-white border border-stone-200 text-stone-500 hover:text-[#BC5434] hover:border-[#BC5434] rounded-full shadow-md transition-all duration-200 cursor-pointer active:scale-90"

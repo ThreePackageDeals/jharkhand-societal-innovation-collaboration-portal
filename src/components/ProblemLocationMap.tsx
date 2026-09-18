@@ -32,10 +32,11 @@ export const ProblemLocationMap: React.FC<ProblemLocationMapProps> = ({
         <span className="truncate text-[10px] text-stone-500">{label}</span>
       </div>
       <MapContainer
+        key={`problem-location-${latitude}-${longitude}-${compact ? 'compact' : 'full'}`}
         center={position}
         zoom={compact ? 12 : 14}
         scrollWheelZoom={false}
-        className={compact ? 'h-40 w-full' : 'h-56 w-full'}
+        className={compact ? 'relative z-0 h-40 w-full' : 'relative z-0 h-56 w-full'}
         aria-label={`Map showing ${label}`}
       >
         <TileLayer
