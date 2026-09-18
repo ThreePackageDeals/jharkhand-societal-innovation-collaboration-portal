@@ -73,7 +73,7 @@ export class ProblemsService {
       throw new Error('Image evidence is compulsory. Please upload or provide at least one photo of the problem.');
     }
 
-    // 2. Gemini Multimodal Image Verification
+    // 2. AI multimodal image verification
     let imageVerification = data.imageVerification;
     if (!imageVerification) {
       try {
@@ -85,7 +85,7 @@ export class ProblemsService {
           district: data.district,
         });
       } catch (err: any) {
-        logger.warn('Gemini image verification warning during problem creation:', err.message);
+        logger.warn('AI image verification warning during problem creation:', err.message);
       }
     }
 
@@ -171,6 +171,23 @@ export class ProblemsService {
             nepRelevance: aiAnalysis.nepRelevance,
             estimatedBudgetBand: aiAnalysis.estimatedBudgetBand,
             socialImpactPotential: aiAnalysis.socialImpactPotential,
+            matchedHeis: {
+              create: (aiAnalysis.matchedHeis || []).map((match: any) => ({
+                universityId: match.universityId,
+                universityName: match.universityName,
+                department: match.department,
+                matchScore: match.matchScore,
+                reason: match.reason,
+              })),
+            },
+            duplicateMatches: {
+              create: (aiAnalysis.duplicateMatches || []).map((match: any) => ({
+                problemId: match.problemId,
+                title: match.title,
+                similarity: match.similarity,
+                district: match.district,
+              })),
+            },
           },
         },
       },

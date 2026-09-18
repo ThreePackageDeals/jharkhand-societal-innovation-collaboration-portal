@@ -44,7 +44,7 @@ router.post('/transcribe', async (req, res) => {
 
     sendResponse(res, { text });
   } catch (err: any) {
-    sendError(res, err.message || 'Unable to transcribe audio');
+    sendError(res, 'AI transcription is temporarily unavailable. Please try again later.', 503, 'AI_UNAVAILABLE');
   }
 });
 
@@ -64,7 +64,7 @@ router.post('/verify-image', async (req, res) => {
     });
     sendResponse(res, verification);
   } catch (err: any) {
-    sendError(res, err.message || 'Image verification failed');
+    sendError(res, 'AI image verification is temporarily unavailable. Please try again later.', 503, 'AI_UNAVAILABLE');
   }
 });
 
@@ -77,7 +77,21 @@ router.post('/analyze-problem', async (req, res) => {
     const analysis = await aiService.analyzeProblem(req.body);
     sendResponse(res, analysis);
   } catch (err: any) {
-    sendError(res, err.message);
+    sendError(res, 'AI evaluation is temporarily unavailable. Please try again later.', 503, 'AI_UNAVAILABLE');
+  }
+});
+
+router.post('/check-duplicate', async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    if (!title || !description) {
+      return sendError(res, 'Title and description are required', 400);
+    }
+
+    const result = await aiService.checkDuplicate(req.body);
+    sendResponse(res, result);
+  } catch (err: any) {
+    sendError(res, err.message || 'Duplicate check failed');
   }
 });
 
@@ -90,7 +104,7 @@ router.post('/generate-proposal', authenticate, roleGuard('FACULTY'), async (req
     const proposal = await aiService.generateProposal(problemId, heiId, customInstructions);
     sendResponse(res, proposal);
   } catch (err: any) {
-    sendError(res, err.message);
+    sendError(res, 'AI proposal generation is temporarily unavailable. Please try again later.', 503, 'AI_UNAVAILABLE');
   }
 });
 

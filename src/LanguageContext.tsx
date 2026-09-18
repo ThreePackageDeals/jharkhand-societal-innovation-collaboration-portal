@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { Language, translations } from './i18n';
 
 interface LanguageContextType {
@@ -10,15 +10,23 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLanguage = window.localStorage.getItem('samadhan-language');
+    return savedLanguage === 'hi' ? 'hi' : 'en';
+  });
 
-  const t = (key: string, ...args: Array<string | number>) => {
+  useEffect(() => {
+    window.localStorage.setItem('samadhan-language', language);
+    document.documentElement.lang = language === 'hi' ? 'hi' : 'en';
+  }, [language]);
+
+  const t = useCallback((key: string, ...args: Array<string | number>) => {
     let translation = translations[language][key] || translations['en'][key] || key;
     args.forEach((arg, i) => {
       translation = translation.replace(`%s`, String(arg));
     });
     return translation;
-  };
+  }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

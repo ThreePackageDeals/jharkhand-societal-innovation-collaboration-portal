@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, MessageSquare, ShieldCheck, Loader2, Users, CheckCircle2 } from 'lucide-react';
 import { DiscussionMessage, SubmitterRole } from '../types';
+import { useLanguage } from '../LanguageContext';
 
 interface DiscussionThreadProps {
   problemId: string;
@@ -13,6 +14,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   problemTitle,
   currentUserRole,
 }) => {
+  const { t } = useLanguage();
   const [discussions, setDiscussions] = useState<DiscussionMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -23,15 +25,15 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   const getRoleBadge = (role: SubmitterRole) => {
     switch (role) {
       case 'Citizen':
-        return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: 'Citizen / PRI' };
+        return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('discussion.role_citizen') };
       case 'Student Researcher':
-        return { bg: 'bg-[#FAF7F2] text-stone-900 border-stone-300', label: 'Student Researcher' };
+        return { bg: 'bg-[#FAF7F2] text-stone-900 border-stone-300', label: t('discussion.role_student') };
       case 'Faculty Mentor':
-        return { bg: 'bg-stone-900 text-white border-stone-900', label: 'Faculty Mentor' };
+        return { bg: 'bg-stone-900 text-white border-stone-900', label: t('discussion.role_faculty') };
       case 'Industry Guide':
-        return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: 'Industry Guide' };
+        return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('discussion.role_industry') };
       case 'Government Admin':
-        return { bg: 'bg-stone-800 text-white border-stone-800', label: 'Govt. Officer' };
+        return { bg: 'bg-stone-800 text-white border-stone-800', label: t('discussion.role_govt') };
       default:
         return { bg: 'bg-stone-100 text-stone-700 border-stone-300', label: role };
     }
@@ -103,7 +105,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
       }
     } catch (err) {
       console.error('Failed to send message:', err);
-      alert('Failed to send comment.');
+      alert(t('discussion.send_error'));
     } finally {
       setSending(false);
     }
@@ -115,10 +117,10 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
       <div className="bg-[#1A1A1A] text-stone-100 px-5 py-3 flex items-center justify-between border-b border-stone-800">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-[#E07A5F]" />
-          <h4 className="font-editorial-serif italic font-bold text-sm text-white">Multi-Stakeholder Collaboration Stream</h4>
+          <h4 className="font-editorial-serif italic font-bold text-sm text-white">{t('discussion.title')}</h4>
         </div>
         <span className="editorial-meta !text-[10px] !mb-0 text-stone-300">
-          {discussions.length} Updates & Field Reports
+          {t('discussion.updates', discussions.length)}
         </span>
       </div>
 
@@ -127,11 +129,11 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         {loading ? (
           <div className="flex justify-center items-center h-full text-stone-400 text-xs font-serif italic">
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            <span>Loading collaboration thread...</span>
+            <span>{t('discussion.loading')}</span>
           </div>
         ) : discussions.length === 0 ? (
           <div className="text-center py-12 text-stone-400 text-xs font-serif italic">
-            No updates posted yet. Be the first to share an update, field test result, or community feedback.
+            {t('discussion.empty')}
           </div>
         ) : (
           discussions.map((msg) => {
@@ -166,20 +168,20 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Your Name / Designation"
+            placeholder={t('discussion.name_placeholder')}
             value={senderName}
             onChange={(e) => setSenderName(e.target.value)}
             className="text-xs px-2.5 py-1.5 border border-stone-300 bg-[#FAF7F2] w-1/3 text-stone-900 focus:outline-none focus:border-stone-900"
           />
           <div className="text-xs text-stone-500 font-serif italic">
-            Posting as: <strong className="text-stone-900 font-sans not-italic">{mapCurrentRoleToSubmitterRole()}</strong>
+            {t('discussion.posting_as')} <strong className="text-stone-900 font-sans not-italic">{getRoleBadge(mapCurrentRoleToSubmitterRole()).label}</strong>
           </div>
         </div>
 
         <div className="flex gap-2">
           <textarea
             rows={2}
-            placeholder="Post field test results, material query, or Gram Panchayat feedback..."
+            placeholder={t('discussion.message_placeholder')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1 text-xs p-2.5 border border-stone-300 bg-[#FAF7F2] text-stone-900 focus:outline-none focus:border-stone-900 leading-relaxed font-serif"
@@ -190,7 +192,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
             className="self-end inline-flex items-center gap-1.5 bg-[#BC5434] hover:bg-[#A3452B] text-white font-bold uppercase tracking-widest text-xs px-4 py-2.5 transition-colors cursor-pointer disabled:opacity-50"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            <span>Post</span>
+            <span>{t('discussion.post')}</span>
           </button>
         </div>
       </form>

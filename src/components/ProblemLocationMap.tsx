@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage } from '../LanguageContext';
 
 interface ProblemLocationMapProps {
   latitude: number;
@@ -23,12 +24,13 @@ export const ProblemLocationMap: React.FC<ProblemLocationMapProps> = ({
   label,
   compact = false,
 }) => {
+  const { t } = useLanguage();
   const position = useMemo<L.LatLngExpression>(() => [latitude, longitude], [latitude, longitude]);
 
   return (
     <section className="overflow-hidden border border-stone-300 bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-stone-200 bg-[#FAF7F2] px-3 py-2">
-        <span className="text-[9px] font-bold uppercase tracking-wider text-stone-600">Mapped challenge location</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-stone-600">{t('map.mapped_location')}</span>
         <span className="truncate text-[10px] text-stone-500">{label}</span>
       </div>
       <MapContainer
@@ -37,7 +39,7 @@ export const ProblemLocationMap: React.FC<ProblemLocationMapProps> = ({
         zoom={compact ? 12 : 14}
         scrollWheelZoom={false}
         className={compact ? 'relative z-0 h-40 w-full' : 'relative z-0 h-56 w-full'}
-        aria-label={`Map showing ${label}`}
+        aria-label={t('map.showing', label)}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

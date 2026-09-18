@@ -10,7 +10,6 @@ import {
   Copy,
   ExternalLink,
   ChevronRight,
-  Send,
   Loader2,
   FileText,
   ShieldCheck,
@@ -29,6 +28,7 @@ interface CitizenSubmissionModalProps {
 }
 
 const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: string) => void, disabled?: boolean }) => {
+  const { t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
@@ -68,11 +68,11 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
             if (text?.trim()) {
               onTranscript(text.trim());
             } else {
-              alert('No speech was detected. Please try recording again.');
+              alert(t('voice.no_speech'));
             }
           } catch (err) {
             console.error(err);
-            alert(err instanceof Error ? err.message : 'Transcription error.');
+            alert(err instanceof Error ? err.message : t('voice.transcription_error'));
           } finally {
             setIsTranscribing(false);
           }
@@ -83,7 +83,7 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
       setIsRecording(true);
     } catch (err) {
       console.error('Error accessing microphone', err);
-      alert('Could not access microphone. Please check permissions.');
+      alert(t('voice.microphone_error'));
     }
   };
 
@@ -97,7 +97,7 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
   if (isTranscribing) {
     return (
       <button type="button" disabled className="flex items-center gap-1.5 text-[10px] text-stone-500 px-2 py-1 border border-stone-200">
-        <Loader2 className="w-3 h-3 animate-spin" /> Processing
+        <Loader2 className="w-3 h-3 animate-spin" /> {t('voice.processing')}
       </button>
     );
   }
@@ -105,14 +105,14 @@ const VoiceRecorderButton = ({ onTranscript, disabled }: { onTranscript: (text: 
   if (isRecording) {
     return (
       <button type="button" onClick={stopRecording} className="flex items-center gap-1.5 text-[10px] bg-red-50 text-[#BC5434] px-2 py-1 border border-[#BC5434] animate-pulse cursor-pointer">
-        <Square className="w-3 h-3 fill-current" /> Stop
+        <Square className="w-3 h-3 fill-current" /> {t('voice.stop')}
       </button>
     );
   }
 
   return (
     <button type="button" onClick={startRecording} disabled={disabled} className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-stone-900 border border-stone-200 hover:border-stone-400 bg-[#FAF7F2] hover:bg-white px-2 py-1 transition-colors cursor-pointer">
-      <Mic className="w-3 h-3" /> Voice
+      <Mic className="w-3 h-3" /> {t('voice.voice')}
     </button>
   );
 };
@@ -125,8 +125,9 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
   const { t } = useLanguage();
   if (!isOpen) return null;
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
@@ -152,6 +153,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
 
   // AI Analysis & Image Verification State
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
+  const [duplicateCheck, setDuplicateCheck] = useState<{
+    checkedWithAI: boolean;
+    embedding: number[];
+    duplicateMatches: AIAnalysisResult['duplicateMatches'];
+  } | null>(null);
   const [imageVerification, setImageVerification] = useState<{
     isValid: boolean;
     confidence: number;
@@ -239,7 +245,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 4 * 1024 * 1024) {
-        alert('Image is too large. Please upload a file smaller than 4MB.');
+      alert(t('citizen.error_image_size'));
         return;
       }
       const reader = new FileReader();
@@ -261,7 +267,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
   // Auto-detect GPS
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
+      alert(t('citizen.error_geolocation'));
       return;
     }
     setGpsLoading(true);
@@ -287,12 +293,12 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
   // Trigger server-side AI evaluation
   const handleRunAiEvaluation = async () => {
     if (!title.trim() || !description.trim()) {
-      alert('Please fill in both the Challenge Title and Problem Description first.');
+      alert(t('citizen.error_title_description'));
       return;
     }
 
     if (!mediaUrl || !mediaUrl.trim()) {
-      alert('Image upload is compulsory. Please attach a photo showing evidence of the societal problem.');
+      alert(t('citizen.error_image_required'));
       return;
     }
 
@@ -320,16 +326,61 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
       setStep(3);
     } catch (err) {
       console.error('AI evaluation failed:', err);
-      alert('Could not complete AI evaluation. You can still submit directly.');
+      alert(t('citizen.error_ai'));
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleRunDuplicateCheck = async () => {
+    if (!title.trim() || !description.trim()) {
+      alert(t('citizen.error_title_description'));
+      return;
+    }
+
+    setIsCheckingDuplicates(true);
+    try {
+      const res = await fetch('/api/ai/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description: description + (priorAttempts ? ` [Prior Attempts: ${priorAttempts}]` : ''),
+          district,
+          blockOrPanchayat,
+          domain,
+        }),
+      });
+      const responseBody = await res.json();
+      if (!res.ok) {
+        throw new Error(responseBody?.error?.message || `Duplicate check failed (${res.status})`);
+      }
+
+      const result = responseBody?.data || responseBody;
+      setDuplicateCheck(result);
+      setAiResult((current) => current ? {
+        ...current,
+        embedding: result.embedding,
+        duplicateMatches: result.duplicateMatches || [],
+      } : current);
+      setStep(4);
+    } catch (err) {
+      console.error('Duplicate check failed:', err);
+      setDuplicateCheck({
+        checkedWithAI: false,
+        embedding: [],
+        duplicateMatches: [],
+      });
+      setStep(4);
+    } finally {
+      setIsCheckingDuplicates(false);
     }
   };
 
   // Final Submit
   const handleSubmitProblem = async () => {
     if (!mediaUrl || !mediaUrl.trim()) {
-      alert('Image upload is compulsory. Please upload a photo showing evidence of the societal problem.');
+      alert(t('citizen.error_image_required'));
       return;
     }
 
@@ -361,7 +412,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
         affectedPopulation: Number(affectedPopulation) || 1000,
         mediaUrls: [mediaUrl],
         videoUrl: videoUrl || undefined,
-        aiAnalysis: normalizedAiAnalysis,
+        embedding: duplicateCheck?.embedding || normalizedAiAnalysis?.embedding || undefined,
+        aiAnalysis: normalizedAiAnalysis ? {
+          ...normalizedAiAnalysis,
+          duplicateMatches: duplicateCheck?.duplicateMatches || normalizedAiAnalysis.duplicateMatches || [],
+        } : undefined,
         imageVerification: imageVerification || undefined,
       };
 
@@ -381,7 +436,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
       onSuccess(problemData);
     } catch (err) {
       console.error('Submission error:', err);
-      alert(err instanceof Error ? err.message : 'Failed to submit problem. Please try again.');
+      alert(err instanceof Error ? err.message : t('citizen.error_submit'));
     } finally {
       setIsSubmitting(false);
     }
@@ -453,6 +508,11 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
               <span className={`w-5 h-5 flex items-center justify-center border ${step === 3 ? 'bg-[#BC5434] border-[#BC5434] text-white' : 'bg-white border-stone-300 text-stone-400'}`}>3</span>
               <span>{t('citizen_submit_step_3')}</span>
             </div>
+            <ChevronRight className="w-4 h-4 text-stone-300 hidden sm:block" />
+            <div className={`flex items-center gap-2 ${step === 4 ? 'text-[#BC5434]' : ''}`}>
+              <span className={`w-5 h-5 flex items-center justify-center border ${step === 4 ? 'bg-[#BC5434] border-[#BC5434] text-white' : 'bg-white border-stone-300 text-stone-400'}`}>4</span>
+              <span>{t('citizen.duplicate_check')}</span>
+            </div>
           </div>
         )}
 
@@ -482,8 +542,8 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   </button>
                 </div>
                 <div className="mt-4 text-[11px] uppercase tracking-wider font-bold text-stone-500 pt-3 border-t border-stone-200 flex justify-between">
-                  <span>District: <strong className="text-stone-900">{createdProblem.district}</strong></span>
-                  <span>Domain: <strong className="text-stone-900">{createdProblem.domain}</strong></span>
+                  <span>{t('citizen.summary_district')} <strong className="text-stone-900">{createdProblem.district}</strong></span>
+                  <span>{t('citizen.summary_domain')} <strong className="text-stone-900">{t('domain.' + createdProblem.domain)}</strong></span>
                 </div>
               </div>
 
@@ -568,7 +628,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   <input
                     id="input-block-panchayat"
                     type="text"
-                    placeholder="e.g., Bundu Block"
+                      placeholder={t('citizen.block_placeholder')}
                     value={blockOrPanchayat}
                     onChange={(e) => setBlockOrPanchayat(e.target.value)}
                     className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -592,7 +652,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                     <input
                       type="number"
                       step="0.0001"
-                      placeholder="Lat (e.g. 23.18)"
+                      placeholder={t('citizen.lat_placeholder')}
                       value={lat}
                       onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
                       className="text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] font-mono focus:outline-none focus:border-[#BC5434]"
@@ -600,7 +660,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                     <input
                       type="number"
                       step="0.0001"
-                      placeholder="Lng (e.g. 85.58)"
+                      placeholder={t('citizen.lng_placeholder')}
                       value={lng}
                       onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
                       className="text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] font-mono focus:outline-none focus:border-[#BC5434]"
@@ -637,7 +697,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   </div>
                     <input
                       type="text"
-                      placeholder="e.g. Ramu Munda"
+                      placeholder={t('citizen.name_placeholder')}
                       value={submitterName}
                       onChange={(e) => setSubmitterName(e.target.value)}
                       className="w-full text-xs px-3 py-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -650,7 +710,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   </div>
                     <input
                       type="text"
-                      placeholder="+91 94311 00000"
+                      placeholder={t('citizen.mobile_placeholder')}
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
                       className="w-full text-xs px-3 py-2 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -670,7 +730,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   <input
                     type="number"
                     min="10"
-                    placeholder="e.g., 2500"
+                    placeholder={t('citizen.pop_placeholder')}
                     value={affectedPopulation}
                     onChange={(e) => setAffectedPopulation(parseInt(e.target.value) || 0)}
                     className="w-full text-sm px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
@@ -766,7 +826,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                             <img src={mediaUrl} alt="Evidence preview" className="h-full w-full object-cover" />
                           </div>
                           <div className="absolute top-2 right-2 flex gap-1.5">
-                            <label className="p-1.5 bg-white/95 hover:bg-white text-stone-700 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer" title="Change Photo">
+                            <label className="p-1.5 bg-white/95 hover:bg-white text-stone-700 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer" title={t('citizen.change_photo')}>
                               <Upload className="w-3.5 h-3.5 text-[#BC5434]" />
                               <input
                                 type="file"
@@ -779,7 +839,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                               type="button"
                               onClick={handleRemoveImage}
                               className="p-1.5 bg-white/95 hover:bg-white text-stone-700 rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
-                              title="Remove photo"
+                              title={t('citizen.remove_photo')}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -831,7 +891,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                         </p>
                         {imageVerification.relevanceExplanation && (
                           <p className="text-[10px] text-stone-600 leading-tight">
-                            <strong>Audit:</strong> {imageVerification.relevanceExplanation}
+                            <strong>{t('citizen.audit')}</strong> {imageVerification.relevanceExplanation}
                           </p>
                         )}
                         {imageVerification.detectedElements && imageVerification.detectedElements.length > 0 && (
@@ -860,13 +920,13 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                     className="w-full text-xs px-3 py-2.5 border border-stone-300 bg-[#FAF7F2] focus:outline-none focus:border-[#BC5434]"
                   />
                   <div className="mt-3 p-4 bg-[#FAF7F2] border border-stone-300 text-xs text-stone-600 font-serif italic leading-relaxed">
-                    <strong className="not-italic text-stone-900 font-bold text-[10px] uppercase tracking-wider block mb-1">Tip</strong>
+                      <strong className="not-italic text-stone-900 font-bold text-[10px] uppercase tracking-wider block mb-1">{t('citizen.tip')}</strong>
                     {t('citizen_submit_video_tip')}
                   </div>
                 </div>
               </div>
             </div>
-          ) : (
+          ) : step === 3 ? (
             /* Step 3: AI Analysis & Pre-Routing Preview */
             <div className="space-y-6 px-2">
               {aiResult ? (
@@ -917,7 +977,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                       </div>
                     </div>
                     <div className="text-xs text-stone-900 mb-2 font-mono">
-                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">Taxonomy:</strong> {aiResult.category} &rsaquo; {aiResult.subCategory}
+                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">{t('citizen.taxonomy')}</strong> {aiResult.category} &rsaquo; {aiResult.subCategory}
                     </div>
                     <p className="text-sm font-serif italic text-stone-700 leading-relaxed">{aiResult.socialImpactPotential}</p>
                     <div className="flex flex-wrap gap-2 mt-4">
@@ -977,15 +1037,15 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   {/* Recommended Tech & NEP Alignment */}
                   <div className="p-5 bg-white border border-stone-300 text-xs space-y-3 font-sans">
                     <div className="flex flex-col sm:flex-row sm:justify-between gap-1 border-b border-stone-200 pb-2">
-                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">Innovations</strong>
+                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">{t('citizen.innovations')}</strong>
                       <span className="text-stone-900 font-bold">{aiResult.recommendedTech?.join(' • ')}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:justify-between gap-1 border-b border-stone-200 pb-2">
-                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">NEP Linkage</strong>
+                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">{t('citizen.nep_linkage')}</strong>
                       <span className="text-stone-900 font-bold">{aiResult.nepRelevance}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">Budget Band</strong>
+                      <strong className="text-stone-500 uppercase tracking-widest text-[10px]">{t('citizen.budget_band')}</strong>
                       <span className="text-[#BC5434] font-bold text-sm">{aiResult.estimatedBudgetBand}</span>
                     </div>
                   </div>
@@ -1002,6 +1062,58 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   >
                     {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     <span>{isAnalyzing ? t('citizen_submit_ai_running') : t('citizen_submit_ai_run_btn')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Step 4: AI duplicate check */
+            <div className="space-y-6 px-2">
+              {duplicateCheck ? (
+                <div className="bg-white border border-stone-300 p-6 shadow-sm">
+                  <div className="flex items-center gap-2 text-stone-900 font-bold uppercase tracking-widest text-[10px] mb-3">
+                    {duplicateCheck.checkedWithAI ? <Sparkles className="w-4 h-4 text-[#BC5434]" /> : <AlertCircle className="w-4 h-4 text-amber-600" />}
+                    <span>{t('citizen.ai_duplicate_check')}</span>
+                  </div>
+                  {duplicateCheck.checkedWithAI ? (
+                    duplicateCheck.duplicateMatches.length > 0 ? (
+                      <div className="bg-[#FAF7F2] border border-[#BC5434] p-5 text-xs text-stone-900">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-widest text-[10px] mb-2">
+                          <AlertCircle className="w-4 h-4 text-[#BC5434]" />
+                          <span>{t('citizen_submit_ai_sim_issues')}</span>
+                        </div>
+                        <p className="text-xs font-serif italic text-stone-600 mb-3">{t('citizen_submit_ai_sim_desc')}</p>
+                        <div className="space-y-2">
+                          {duplicateCheck.duplicateMatches.map((match, index) => (
+                            <div key={index} className="bg-white p-3 border border-stone-300 flex justify-between items-center text-xs">
+                              <span className="truncate max-w-xs font-bold font-editorial-serif text-sm">{match.title} ({match.district})</span>
+                              <span className="text-[#BC5434] font-bold uppercase tracking-widest text-[10px] whitespace-nowrap">{match.similarity}% match</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mt-4 text-xs font-serif italic text-stone-600">{t('citizen.distinct_location_note')}</p>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-serif italic">
+                        No substantially similar challenge was found in the registry.
+                      </div>
+                    )
+                  ) : (
+                    <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 text-sm font-serif italic">
+                      AI was unavailable, so the challenge can be registered but was not automatically compared with existing submissions.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12 px-4 border border-stone-300 bg-[#FAF7F2]">
+                  <p className="font-serif italic text-stone-600 mb-6">{t('citizen.duplicate_instruction')}</p>
+                  <button
+                    onClick={handleRunDuplicateCheck}
+                    disabled={isCheckingDuplicates}
+                    className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    {isCheckingDuplicates ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    <span>{isCheckingDuplicates ? 'Checking Existing Challenges...' : 'Check for Existing Challenge'}</span>
                   </button>
                 </div>
               )}
@@ -1030,7 +1142,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                   type="button"
                   onClick={() => {
                     if (!title.trim()) {
-                      alert('Please provide a challenge title.');
+                      alert(t('citizen.error_title_required'));
                       return;
                     }
                     setStep(2);
@@ -1043,17 +1155,7 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
               )}
 
               {step === 2 && (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSubmitProblem}
-                    disabled={isSubmitting}
-                    className="inline-flex items-center justify-center gap-2 bg-[#FAF7F2] hover:bg-white border border-stone-300 text-stone-900 font-bold uppercase tracking-widest text-[11px] px-6 py-3 cursor-pointer disabled:opacity-50 transition-colors"
-                  >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span>{t('citizen_submit_skip')}</span>
-                  </button>
-                  <button
+                <button
                     type="button"
                     onClick={handleRunAiEvaluation}
                     disabled={isAnalyzing}
@@ -1062,14 +1164,25 @@ export const CitizenSubmissionModal: React.FC<CitizenSubmissionModalProps> = ({
                     {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     <span>{t('citizen_submit_ai_run_btn')}</span>
                   </button>
-                </div>
               )}
 
               {step === 3 && (
                 <button
                   type="button"
+                  onClick={handleRunDuplicateCheck}
+                  disabled={isCheckingDuplicates}
+                  className="inline-flex items-center justify-center gap-2 bg-[#BC5434] hover:bg-[#A3452B] text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
+                >
+                  {isCheckingDuplicates ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <span>{t('citizen_submit_ai_sim_issues')}</span>
+                </button>
+              )}
+
+              {step === 4 && (
+                <button
+                  type="button"
                   onClick={handleSubmitProblem}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !duplicateCheck}
                   className="inline-flex items-center justify-center gap-2 bg-[#BC5434] hover:bg-[#A3452B] text-white font-bold uppercase tracking-widest text-[11px] px-8 py-3 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}

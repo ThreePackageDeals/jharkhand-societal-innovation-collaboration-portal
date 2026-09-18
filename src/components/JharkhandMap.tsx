@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import * as d3 from 'd3';
 import { INITIAL_UNIVERSITIES, INITIAL_ORGANIZATIONS } from '../data/jharkhandData';
+import { useLanguage } from '../LanguageContext';
 
 interface MapProps {
   districtStats: { district: string; challengesCount: number; activeProjects: number }[];
@@ -19,6 +20,7 @@ const normalizeDistrictName = (name: string) => {
 };
 
 export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistrict, onSelectInstitution }) => {
+  const { t } = useLanguage();
   const [geoData, setGeoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -176,9 +178,9 @@ export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistri
           tooltipRef.current.style.opacity = '1';
           tooltipRef.current.innerHTML = `
             <div class="font-editorial-serif text-lg font-bold text-stone-900 border-b border-stone-200 pb-1 mb-2">${stat?.district || distName}</div>
-            <div class="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">Challenges: <strong class="text-stone-900 ml-1">${stat?.challengesCount || 0}</strong></div>
-            <div class="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">Active Projects: <strong class="text-stone-900 ml-1">${stat?.activeProjects || 0}</strong></div>
-            <div class="text-[10px] font-bold uppercase tracking-wider text-[#BC5434] border-t border-stone-100 pt-1 mt-1">Innovation Score: <strong class="text-stone-900 ml-1">${stat ? getInnovationScore(stat) : 0}</strong></div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">${t('map.challenges')} <strong class="text-stone-900 ml-1">${stat?.challengesCount || 0}</strong></div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">${t('map.active_projects')} <strong class="text-stone-900 ml-1">${stat?.activeProjects || 0}</strong></div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-[#BC5434] border-t border-stone-100 pt-1 mt-1">${t('map.innovation_score')} <strong class="text-stone-900 ml-1">${stat ? getInnovationScore(stat) : 0}</strong></div>
           `;
         }
       })
@@ -208,8 +210,8 @@ export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistri
 
       // --- Render Institution Markers ---
       const allInstitutions = [
-        ...INITIAL_UNIVERSITIES.map(u => ({ ...u, type: 'university', color: '#78350F', iconLabel: 'University' })),
-        ...INITIAL_ORGANIZATIONS.map(i => ({ ...i, type: 'industry', color: '#B91C1C', iconLabel: 'Industry' })),
+        ...INITIAL_UNIVERSITIES.map(u => ({ ...u, type: 'university', color: '#78350F', iconLabel: t('map.university') })),
+        ...INITIAL_ORGANIZATIONS.map(i => ({ ...i, type: 'industry', color: '#B91C1C', iconLabel: t('map.industry') })),
       ].filter((institution: any) => {
         const coords = institution.locationCoords;
         return coords && Number.isFinite(coords.lng) && Number.isFinite(coords.lat);
@@ -287,9 +289,9 @@ export const JharkhandMap: React.FC<MapProps> = ({ districtStats, onSelectDistri
           return name;
         });
       */
-  }, [geoData, districtStats, onSelectDistrict, onSelectInstitution]);
+  }, [geoData, districtStats, onSelectDistrict, onSelectInstitution, t]);
 
-  if (error) return <div className="p-8 text-center text-sm text-red-500 font-medium">Map data failed to load.</div>;
+  if (error) return <div className="p-8 text-center text-sm text-red-500 font-medium">{t('map.load_failed')}</div>;
   
   return (
     <div className="relative w-full h-full min-h-[300px] md:min-h-[400px]">

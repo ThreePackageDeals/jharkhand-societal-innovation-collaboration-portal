@@ -2,13 +2,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Prefer the explicitly named AI key when both legacy and current names
+// are present. This prevents a stale AI_API_KEY from silently winning.
+const configuredAiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+
 export const ENV = {
   PORT: process.env.PORT || 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   DATABASE_URL: process.env.DATABASE_URL,
   DIRECT_URL: process.env.DIRECT_URL,
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || process.env.AI_API_KEY,
-  AI_API_KEY: process.env.AI_API_KEY || process.env.GEMINI_API_KEY,
+  GEMINI_API_KEY: configuredAiKey,
+  AI_API_KEY: configuredAiKey,
   JWT_SECRET: process.env.JWT_SECRET || 'hackathon-secret-key-2026',
   EMAIL_HOST: process.env.EMAIL_HOST,
   EMAIL_PORT: process.env.EMAIL_PORT,

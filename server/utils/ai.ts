@@ -20,7 +20,7 @@ export class AIClient {
     }
   }
 
-  public async generateContent(prompt: string, modelName = 'gemini-3.6-flash') {
+  public async generateContent(prompt: string, modelName = 'gemini-3.5-flash-lite') {
     if (!this.client) {
       throw new Error('AI client not initialized. Check your API key.');
     }
@@ -109,7 +109,7 @@ export class AIClient {
 
     try {
       const response = await this.client.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: `Translate the following voice transcription into clear, natural English for a Jharkhand community challenge form.
 
 Rules:
@@ -138,7 +138,7 @@ ${transcript}`,
     imageBase64: string,
     mimeType: string,
     context: { title?: string; description?: string; domain?: string; district?: string },
-    modelName = 'gemini-3.6-flash'
+    modelName = 'gemini-3.5-flash-lite'
   ): Promise<{
     isValid: boolean;
     confidence: number;

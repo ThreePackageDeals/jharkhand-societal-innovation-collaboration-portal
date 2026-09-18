@@ -2,9 +2,11 @@ import React from 'react';
 import { useAuth } from '../AuthContext';
 import { AlertCircle, X } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 export const VerificationBanner = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
 
   if (!user || user.verificationStatus !== 'PENDING' || dismissed) {
@@ -16,9 +18,9 @@ export const VerificationBanner = () => {
       <div className="flex items-center">
         <AlertCircle className="text-[#BC5434] mr-3 h-5 w-5" />
         <div className="text-sm">
-          <span className="font-bold text-stone-900 uppercase tracking-wider text-[10px] block mb-0.5">Verification Pending</span>
+          <span className="font-bold text-stone-900 uppercase tracking-wider text-[10px] block mb-0.5">{t('verification.pending')}</span>
           <p className="text-stone-600 font-serif italic">
-            Your profile is being reviewed. Some features may be limited until verified.
+            {t('verification.review_message')}
           </p>
         </div>
       </div>

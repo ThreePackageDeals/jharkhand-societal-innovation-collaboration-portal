@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { Role } from '../types';
+import { useLanguage } from '../LanguageContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,13 +12,14 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, allowedRoles, requireVerified }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center text-stone-600">
         <div className="w-8 h-8 border-2 border-stone-200 border-t-[#BC5434] rounded-full animate-spin mb-4"></div>
-        <p className="text-xs uppercase tracking-widest font-bold">Loading Session</p>
+        <p className="text-xs uppercase tracking-widest font-bold">{t('verification.loading_session')}</p>
       </div>
     );
   }
@@ -34,7 +36,7 @@ export const ProtectedRoute = ({ children, allowedRoles, requireVerified }: Prot
     return (
       <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center text-stone-600">
         <div className="w-8 h-8 border-2 border-stone-200 border-t-[#BC5434] rounded-full animate-spin mb-4"></div>
-        <p className="text-xs uppercase tracking-widest font-bold">Verifying Session</p>
+        <p className="text-xs uppercase tracking-widest font-bold">{t('verification.verifying_session')}</p>
       </div>
     );
   }
@@ -42,13 +44,13 @@ export const ProtectedRoute = ({ children, allowedRoles, requireVerified }: Prot
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
       <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center p-4 text-center">
-        <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">Access Restricted</h2>
-        <p className="text-stone-500 font-serif italic mb-6">You do not have the required permissions to view this resource.</p>
+        <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">{t('verification.access_restricted')}</h2>
+        <p className="text-stone-500 font-serif italic mb-6">{t('verification.permission_denied')}</p>
         <button
           onClick={() => window.history.back()}
           className="bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-widest px-6 py-3 hover:bg-black transition-colors cursor-pointer"
         >
-          Go Back
+          {t('common.go_back')}
         </button>
       </div>
     );
@@ -60,13 +62,12 @@ export const ProtectedRoute = ({ children, allowedRoles, requireVerified }: Prot
         <div className="w-16 h-16 bg-[#FAF7F2] border border-stone-300 rounded-full flex items-center justify-center mb-6">
           <div className="w-8 h-8 border-2 border-stone-200 border-t-[#BC5434] rounded-full animate-spin"></div>
         </div>
-        <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">Verification Pending</h2>
+        <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">{t('verification.pending')}</h2>
         <p className="text-stone-500 font-serif italic mb-8 max-w-md">
-          Your profile is currently under review by the state administration.
-          You will gain full access once your credentials are verified.
+          {t('verification.profile_under_review')}
         </p>
         <div className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
-          Status: Under Review
+          {t('verification.status_under_review')}
         </div>
       </div>
     );

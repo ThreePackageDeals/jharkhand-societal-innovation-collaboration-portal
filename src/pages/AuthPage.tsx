@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { Role } from '../types';
-import { User, GraduationCap, Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { User, GraduationCap, Building2, ShieldCheck, ArrowRight, Loader2, Home } from 'lucide-react';
 
 type AuthStep = 'ROLE_SELECTION' | 'CREDENTIALS' | 'ONBOARDING' | 'COMPLETING';
 type OtpStatus = 'idle' | 'sent' | 'verified';
@@ -39,7 +39,7 @@ export const AuthPage = () => {
     }
 
     void login(googleToken!).then(() => navigate(from, { replace: true })).catch((err) => {
-      alert(err instanceof Error ? err.message : 'Google sign-in failed');
+      alert(err instanceof Error ? err.message : t('auth.google_signin_failed'));
     });
   }, [from, location.search, login, navigate]);
 
@@ -58,7 +58,7 @@ export const AuthPage = () => {
   };
 
   const sendOtp = async (identifier: string, channel: 'email' | 'phone') => {
-    if (!identifier.trim()) return alert(`Enter your ${channel === 'email' ? 'email address' : 'phone number'} first.`);
+    if (!identifier.trim()) return alert(t(channel === 'email' ? 'auth.enter_email' : 'auth.enter_phone'));
     setIsLoading(true);
     try {
       const response = await fetch('/api/auth/send-otp', {
@@ -101,7 +101,7 @@ export const AuthPage = () => {
       setStep('ONBOARDING');
       return;
     }
-    alert('Verify both your email and phone number before continuing.');
+    alert(t('auth.verify_both'));
   };
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
@@ -165,6 +165,14 @@ export const AuthPage = () => {
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex items-center justify-center p-4 font-sans">
       <div className="max-w-md w-full bg-white border border-stone-200 rounded-sm shadow-sm p-8">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-[#BC5434] transition-colors cursor-pointer"
+        >
+          <Home className="h-4 w-4" />
+          {t('back_to_home')}
+        </button>
 
         {step === 'ROLE_SELECTION' && (
           <div className="space-y-6">
@@ -221,7 +229,7 @@ export const AuthPage = () => {
             </button>
             <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-stone-400">
               <span className="h-px flex-1 bg-stone-200" />
-              <span>or register with OTP</span>
+              <span>{t('auth.register_with_otp')}</span>
               <span className="h-px flex-1 bg-stone-200" />
             </div>
             <form onSubmit={handleAuthSubmit} className="space-y-4">
@@ -244,7 +252,7 @@ export const AuthPage = () => {
                   disabled={isLoading || otpStatus.email === 'verified'}
                   className="shrink-0 p-3 border border-stone-300 rounded-sm hover:bg-stone-50 disabled:opacity-50 text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
                 >
-                  {otpStatus.email === 'verified' ? 'Email verified' : 'Send email OTP'}
+                  {otpStatus.email === 'verified' ? t('auth.email_verified') : t('auth.send_email_otp')}
                 </button>
                 {otpStatus.email === 'sent' && (
                   <>
@@ -253,15 +261,15 @@ export const AuthPage = () => {
                       onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       inputMode="numeric"
                       maxLength={6}
-                      placeholder="6-digit code"
+                      placeholder={t('auth.otp_placeholder')}
                       className="min-w-0 flex-1 p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
                     />
-                    <button type="button" onClick={() => verifyOtp(email, emailOtp, 'email')} disabled={isLoading || emailOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">Verify</button>
+                    <button type="button" onClick={() => verifyOtp(email, emailOtp, 'email')} disabled={isLoading || emailOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">{t('auth.verify')}</button>
                   </>
                 )}
               </div>
               <div className="space-y-1 pt-2">
-                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Mobile number</label>
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.mobile_label')}</label>
                 <input
                   type="tel"
                   required
@@ -279,7 +287,7 @@ export const AuthPage = () => {
                   disabled={isLoading || otpStatus.phone === 'verified'}
                   className="shrink-0 p-3 border border-stone-300 rounded-sm hover:bg-stone-50 disabled:opacity-50 text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
                 >
-                  {otpStatus.phone === 'verified' ? 'Phone verified' : 'Send SMS OTP'}
+                  {otpStatus.phone === 'verified' ? t('auth.phone_verified') : t('auth.send_sms_otp')}
                 </button>
                 {otpStatus.phone === 'sent' && (
                   <>
@@ -288,10 +296,10 @@ export const AuthPage = () => {
                       onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       inputMode="numeric"
                       maxLength={6}
-                      placeholder="6-digit code"
+                      placeholder={t('auth.otp_placeholder')}
                       className="min-w-0 flex-1 p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
                     />
-                    <button type="button" onClick={() => verifyOtp(phone, phoneOtp, 'phone')} disabled={isLoading || phoneOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">Verify</button>
+                    <button type="button" onClick={() => verifyOtp(phone, phoneOtp, 'phone')} disabled={isLoading || phoneOtp.length !== 6} className="p-3 bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">{t('auth.verify')}</button>
                   </>
                 )}
               </div>

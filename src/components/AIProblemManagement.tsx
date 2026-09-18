@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ProblemStatement, University, District, DomainTheme } from '../types';
 import { JHARKHAND_DISTRICTS, THEMATIC_DOMAINS } from '../data/jharkhandData';
+import { useLanguage } from '../LanguageContext';
 
 interface AIProblemManagementProps {
   problems: ProblemStatement[];
@@ -32,6 +33,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
   onSelectProblem,
   onRefreshProblems,
 }) => {
+  const { t } = useLanguage();
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
   const [selectedUrgency, setSelectedUrgency] = useState<string>('all');
@@ -90,7 +92,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
       setAssigningProblemId(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to assign university. Please try again.');
+      alert(t('ai_mgmt.assignment_failed'));
     } finally {
       setIsSubmittingAssign(false);
     }
@@ -106,15 +108,15 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="editorial-meta">AI Problem Management & Routing Desk</span>
+              <span className="editorial-meta">{t('ai_mgmt.title')}</span>
               <span className="text-stone-600">•</span>
-              <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">Triage Matrix</span>
+              <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">{t('ai_mgmt.matrix')}</span>
             </div>
             <h2 className="font-editorial-serif italic text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Institutional Triage & Allocation Matrix
+              {t('ai_mgmt.heading')}
             </h2>
             <p className="text-xs text-stone-400 font-serif italic max-w-2xl mt-2 leading-relaxed">
-              Automated classification, deduplication clustering, and intelligent matching with Jharkhand Higher Education Institutions based on faculty specialization and incubation center capacity.
+              {t('ai_mgmt.description')}
             </p>
           </div>
 
@@ -122,19 +124,19 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             <div className="bg-[#FAF7F2] border border-[#BC5434] p-3 min-w-[100px]">
               <div className="font-editorial-serif text-2xl font-light text-[#BC5434]">{totalCount}</div>
-              <div className="text-[10px] text-stone-600 font-serif italic mt-1">Total Received</div>
+              <div className="text-[10px] text-stone-600 font-serif italic mt-1">{t('ai_mgmt.total_received')}</div>
             </div>
             <div className="bg-[#FAF7F2] border border-[#BC5434] p-3 min-w-[100px]">
               <div className="font-editorial-serif text-2xl font-light text-[#BC5434]">{unassignedCount}</div>
-              <div className="text-[10px] text-stone-600 font-serif italic mt-1">Pending Route</div>
+              <div className="text-[10px] text-stone-600 font-serif italic mt-1">{t('ai_mgmt.pending_route')}</div>
             </div>
             <div className="bg-[#FAF7F2] border border-[#BC5434] p-3 min-w-[100px]">
               <div className="font-editorial-serif text-2xl font-light text-[#BC5434]">{highPriorityCount}</div>
-              <div className="text-[10px] text-stone-600 font-serif italic mt-1">Critical &gt; 85</div>
+              <div className="text-[10px] text-stone-600 font-serif italic mt-1">{t('ai_mgmt.critical_score')}</div>
             </div>
             <div className="bg-[#FAF7F2] border border-[#BC5434] p-3 min-w-[100px]">
               <div className="font-editorial-serif text-2xl font-light text-[#BC5434]">{duplicateAlertsCount}</div>
-              <div className="text-[10px] text-stone-600 font-serif italic mt-1">Dup Clusters</div>
+              <div className="text-[10px] text-stone-600 font-serif italic mt-1">{t('ai_mgmt.duplicate_clusters')}</div>
             </div>
           </div>
         </div>
@@ -147,7 +149,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
           <div className="relative min-w-[200px] flex-1 max-w-xs">
             <input
               type="text"
-              placeholder="Search by keywords, block, ID..."
+              placeholder={t('ai_mgmt.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full text-xs pl-8 pr-3 py-2 border border-stone-300 bg-white text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#BC5434]"
@@ -161,7 +163,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             onChange={(e) => setSelectedDomain(e.target.value)}
             className="text-xs px-3 py-2 border border-stone-300 bg-white text-stone-900 focus:outline-none focus:border-[#BC5434]"
           >
-            <option value="all">All Domains ({THEMATIC_DOMAINS.length})</option>
+            <option value="all">{t('ai_mgmt.all_domains', THEMATIC_DOMAINS.length)}</option>
             {THEMATIC_DOMAINS.map((td) => (
               <option key={td.key} value={td.key}>
                 {td.label}
@@ -175,7 +177,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             onChange={(e) => setSelectedDistrict(e.target.value)}
             className="text-xs px-3 py-2 border border-stone-300 bg-white text-stone-900 focus:outline-none focus:border-[#BC5434]"
           >
-            <option value="all">All 24 Districts</option>
+            <option value="all">{t('ai_mgmt.all_districts')}</option>
             {JHARKHAND_DISTRICTS.map((dist) => (
               <option key={dist} value={dist}>
                 {dist}
@@ -189,16 +191,16 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             onChange={(e) => setSelectedUrgency(e.target.value)}
             className="text-xs px-3 py-2 border border-stone-300 bg-white text-stone-900 focus:outline-none focus:border-[#BC5434]"
           >
-            <option value="all">All Urgency Levels</option>
-            <option value="Critical">Critical</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
+            <option value="all">{t('ai_mgmt.all_urgency')}</option>
+            <option value="Critical">{t('urgency.Critical')}</option>
+            <option value="High">{t('urgency.High')}</option>
+            <option value="Medium">{t('urgency.Medium')}</option>
+            <option value="Low">{t('urgency.Low')}</option>
           </select>
         </div>
 
         <div className="text-xs font-serif italic text-stone-600">
-          Showing <strong className="font-bold text-stone-900 not-italic">{filteredProblems.length}</strong> challenges
+          {t('ai_mgmt.showing', filteredProblems.length)}
         </div>
       </div>
 
@@ -222,7 +224,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                       {prob.trackingCode}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF7F2] text-[#BC5434] border border-stone-300">
-                      {(prob.domain || 'general').replace('_', ' ')}
+                      {t('domain.' + (prob.domain || 'general'))}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF7F2] text-stone-900 border border-stone-300">
                       {prob.district} • {prob.blockOrPanchayat}
@@ -235,12 +237,12 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                             : 'bg-stone-200 text-stone-800'
                         }`}
                     >
-                      {prob.urgency} Urgency
+                      {t('ai_mgmt.urgency', t('urgency.' + prob.urgency))}
                     </span>
                     {hasDuplicates && (
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white text-[#BC5434] border border-[#BC5434] flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        <span>{prob.aiAnalysis.duplicateMatches.length} Similar</span>
+                        <span>{t('ai_mgmt.similar', prob.aiAnalysis.duplicateMatches.length)}</span>
                       </span>
                     )}
                   </div>
@@ -262,10 +264,10 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                       </div>
                       <div>
                         <div className="font-bold text-stone-900 uppercase tracking-wider text-[10px]">
-                          AI Priority Score
+                          {t('ai_mgmt.priority_score')}
                         </div>
                         <div className="text-[11px] text-stone-600 font-serif italic mt-0.5">
-                          {prob.aiAnalysis?.subCategory || 'Grassroots Need'}
+                          {prob.aiAnalysis?.subCategory || t('ai_mgmt.grassroots_need')}
                         </div>
                       </div>
                     </div>
@@ -276,7 +278,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                         <Building2 className="w-3.5 h-3.5 text-stone-500" />
                         <div>
                           <div className="font-bold text-stone-900 text-[10px] uppercase tracking-wider">
-                            Match: <span className="text-[#BC5434]">{topMatch.universityName}</span> ({topMatch.matchScore}%)
+                            {t('ai_mgmt.match')} <span className="text-[#BC5434]">{topMatch.universityName}</span> ({topMatch.matchScore}%)
                           </div>
                           <div className="text-[10px] text-stone-500 font-serif italic mt-0.5">{topMatch.department}</div>
                         </div>
@@ -284,7 +286,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                     )}
 
                     <div className="text-[11px] text-stone-600 font-serif italic">
-                      Affected: <strong className="text-stone-900 not-italic">{(prob.affectedPopulation || 0).toLocaleString()}</strong>
+                      {t('ai_mgmt.affected')} <strong className="text-stone-900 not-italic">{(prob.affectedPopulation || 0).toLocaleString()}</strong>
                     </div>
                   </div>
                 </div>
@@ -293,12 +295,12 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                 <div className="flex flex-col items-end gap-2 shrink-0 md:min-w-[190px]">
                   {isAssigned ? (
                     <div className="w-full bg-[#FAF7F2] border border-stone-300 p-3 text-center">
-                      <div className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Assigned HEI</div>
+                      <div className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">{t('ai_mgmt.assigned_hei')}</div>
                       <div className="text-xs font-bold text-stone-900 mt-1">{prob.assignedHeiName}</div>
                       <div className="text-[10px] text-stone-600 font-serif italic mt-0.5">{prob.assignedDepartment}</div>
                       <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#BC5434]">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Allocation Active</span>
+                        <span>{t('ai_mgmt.allocation_active')}</span>
                       </div>
                     </div>
                   ) : (
@@ -308,7 +310,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                       className="w-full inline-flex items-center justify-center gap-2 bg-[#BC5434] hover:bg-[#A3452B] text-white text-xs font-bold uppercase tracking-widest px-4 py-3 cursor-pointer"
                     >
                       <Building2 className="w-4 h-4" />
-                      <span>Route to HEI</span>
+                      <span>{t('ai_mgmt.route_to_hei')}</span>
                     </button>
                   )}
 
@@ -316,7 +318,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                     onClick={() => onSelectProblem(prob)}
                     className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-stone-900 py-2 border border-transparent hover:border-stone-300 cursor-pointer"
                   >
-                    <span>Inspect Dossier</span>
+                    <span>{t('ai_mgmt.inspect_dossier')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -327,7 +329,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
 
         {filteredProblems.length === 0 && (
           <div className="col-span-full py-12 bg-white border border-stone-300 text-center p-8">
-            <p className="font-editorial-serif italic text-base text-stone-600">No challenges found matching the selected filters.</p>
+            <p className="font-editorial-serif italic text-base text-stone-600">{t('ai_mgmt.no_challenges')}</p>
           </div>
         )}
       </div>
@@ -339,7 +341,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-6">
               <div className="flex items-center gap-3">
                 <Building2 className="w-5 h-5 text-stone-900" />
-                <h3 className="font-editorial-serif italic font-bold text-xl text-stone-900">Route Challenge to HEI</h3>
+                <h3 className="font-editorial-serif italic font-bold text-xl text-stone-900">{t('ai_mgmt.route_title')}</h3>
               </div>
               <button
                 onClick={() => setAssigningProblemId(null)}
@@ -350,10 +352,10 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             </div>
 
             <div className="mb-6">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">Target Societal Challenge</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">{t('ai_mgmt.target_challenge')}</div>
               <div className="text-base font-bold text-stone-900 leading-snug">{currentProblemForAssign.title}</div>
               <div className="text-xs text-stone-600 font-serif italic mt-1">
-                {currentProblemForAssign.district} • {(currentProblemForAssign.domain || 'general').replace('_', ' ')} • Priority: {currentProblemForAssign.aiAnalysis?.priorityScore}/100
+                {currentProblemForAssign.district} • {t('domain.' + (currentProblemForAssign.domain || 'general'))} • {t('ai_mgmt.priority')} {currentProblemForAssign.aiAnalysis?.priorityScore}/100
               </div>
             </div>
 
@@ -362,10 +364,10 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
               <div className="bg-[#FAF7F2] border border-[#BC5434] p-4 mb-6 text-xs text-stone-900">
                 <div className="font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-1.5 text-[#BC5434]">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>AI Recommended HEI Match</span>
+                  <span>{t('ai_mgmt.recommended_match')}</span>
                 </div>
                 <div className="font-bold text-stone-900 text-sm">
-                  {currentProblemForAssign.aiAnalysis.matchedHeis[0].universityName} ({currentProblemForAssign.aiAnalysis.matchedHeis[0].matchScore}% Match)
+                  {currentProblemForAssign.aiAnalysis.matchedHeis[0].universityName} ({currentProblemForAssign.aiAnalysis.matchedHeis[0].matchScore}% {t('ai_mgmt.match_suffix')})
                 </div>
                 <p className="text-[11px] text-stone-600 font-serif italic mt-1.5 leading-relaxed">
                   {currentProblemForAssign.aiAnalysis.matchedHeis[0].reason}
@@ -376,7 +378,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
             <div className="space-y-5">
               <div>
                 <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                  Select Higher Education Institution (HEI) <span className="text-[#BC5434]">*</span>
+                  {t('ai_mgmt.select_hei')} <span className="text-[#BC5434]">*</span>
                 </label>
                 <select
                   id="select-assign-hei"
@@ -401,7 +403,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
 
               <div>
                 <label className="block text-[10px] uppercase font-bold tracking-wider text-stone-700 mb-1.5">
-                  Department / Center of Excellence <span className="text-[#BC5434]">*</span>
+                  {t('ai_mgmt.select_department')} <span className="text-[#BC5434]">*</span>
                 </label>
                 <select
                   value={selectedDept}
@@ -419,10 +421,10 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
               {currentSelectedHei && (
                 <div className="text-xs p-3 bg-stone-50 border border-stone-200 space-y-1.5 text-stone-600 font-serif italic">
                   <div>
-                    <strong className="not-italic text-stone-900 text-[11px]">Incubation Center:</strong> {currentSelectedHei.incubationCenter}
+                    <strong className="not-italic text-stone-900 text-[11px]">{t('ai_mgmt.incubation_center')}</strong> {currentSelectedHei.incubationCenter}
                   </div>
                   <div>
-                    <strong className="not-italic text-stone-900 text-[11px]">Available Mentors:</strong> {currentSelectedHei.facultyMentors?.map((m) => m.name).join(', ') || 'None'}
+                    <strong className="not-italic text-stone-900 text-[11px]">{t('ai_mgmt.available_mentors')}</strong> {currentSelectedHei.facultyMentors?.map((m) => m.name).join(', ') || t('ai_mgmt.none')}
                   </div>
                 </div>
               )}
@@ -434,7 +436,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                 onClick={() => setAssigningProblemId(null)}
                 className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-stone-900 cursor-pointer"
               >
-                Cancel
+                {t('ai_mgmt.cancel')}
               </button>
               <button
                 type="button"
@@ -444,7 +446,7 @@ export const AIProblemManagement: React.FC<AIProblemManagementProps> = ({
                 className="inline-flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white font-bold uppercase tracking-widest text-[11px] px-6 py-2.5 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isSubmittingAssign ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                <span>Dispatch to Dean</span>
+                <span>{t('ai_mgmt.dispatch')}</span>
               </button>
             </div>
           </div>

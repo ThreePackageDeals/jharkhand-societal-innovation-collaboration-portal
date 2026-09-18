@@ -96,7 +96,7 @@ export const ProblemDetailsModal: React.FC<ProblemDetailsModalProps> = ({
             <span>•</span>
             <span className="font-medium text-stone-700">{problem.blockOrPanchayat}</span>
             <span>•</span>
-            <span>Submitted by: <strong className="text-stone-900">{problem.submittedBy?.name || 'Unknown'}</strong> ({problem.submittedBy?.type?.replace('_', ' ') || 'Unknown'})</span>
+            <span>{t('prob_detail_submitted_by')} <strong className="text-stone-900">{problem.submittedBy?.name || t('prob_detail_unknown')}</strong> ({problem.submittedBy?.type?.replace('_', ' ') || t('prob_detail_unknown')})</span>
           </div>
         </div>
 
@@ -281,11 +281,11 @@ export const ProblemDetailsModal: React.FC<ProblemDetailsModalProps> = ({
                   {/* Recommended Tech */}
                   <div className="p-3.5 bg-[#FAF7F2] border border-stone-300 space-y-1 text-xs">
                     <div>
-                      <strong className="text-stone-900">Recommended Innovations:</strong>{' '}
+                      <strong className="text-stone-900">{t('prob_detail_recommended_innovations')}</strong>{' '}
                       <span className="text-stone-600">{problem.aiAnalysis.recommendedTech?.join(' • ')}</span>
                     </div>
                     <div>
-                      <strong className="text-stone-900">NEP 2020 Relevance:</strong>{' '}
+                      <strong className="text-stone-900">{t('prob_detail_nep_relevance')}</strong>{' '}
                       <span className="text-stone-600 font-serif italic">{problem.aiAnalysis.nepRelevance}</span>
                     </div>
                   </div>

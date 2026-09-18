@@ -79,9 +79,111 @@ export class AIService {
         district: data.district,
       });
     } catch (err: any) {
-      logger.error('[AI Service] Gemini image verification error:', err.message);
+      logger.error('[AI Service] Image verification error:', err.message);
       throw err;
     }
+  }
+
+  async checkDuplicate(data: {
+    title: string;
+    description: string;
+    district?: string;
+    blockOrPanchayat?: string;
+    domain?: string;
+  }) {
+    const allProblems = await problemsService.getAllProblems({});
+    const legacyMatches = this.findLegacyTextMatches(data, allProblems);
+
+    if (!gemini.isConfigured()) {
+      return {
+        checkedWithAI: false,
+        embedding: [],
+        duplicateMatches: legacyMatches,
+      };
+    }
+
+    const textToEmbed = [
+      data.title,
+      data.description,
+      data.domain && `Domain: ${data.domain}`,
+      data.district && `District: ${data.district}`,
+      data.blockOrPanchayat && `Location: ${data.blockOrPanchayat}`,
+    ].filter(Boolean).join('\n');
+
+    try {
+      const embedding = await gemini.embedContent(textToEmbed);
+
+      const embeddingMatches = allProblems
+        .filter((problem: any) => Array.isArray(problem.embedding) && problem.embedding.length > 0)
+        .map((problem: any) => {
+          try {
+            return {
+              problemId: problem.id,
+              title: problem.title,
+              similarity: Math.round(cosineSimilarity(embedding, problem.embedding) * 100),
+              district: problem.district,
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter((match): match is {
+          problemId: string;
+          title: string;
+          similarity: number;
+          district: string;
+        } => Boolean(match) && match.similarity >= 75)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 3);
+
+      const duplicateMatches = [
+        ...embeddingMatches,
+        ...legacyMatches,
+      ]
+        .sort((a, b) => b.similarity - a.similarity)
+        .filter((match, index, matches) => matches.findIndex((candidate) => candidate.problemId === match.problemId) === index)
+        .slice(0, 3);
+
+      return {
+        checkedWithAI: true,
+        embedding,
+        duplicateMatches,
+      };
+    } catch (err: any) {
+      logger.error('AI duplicate check error:', err.message);
+      return {
+        checkedWithAI: false,
+        embedding: [],
+        duplicateMatches: legacyMatches,
+      };
+    }
+  }
+
+  private findLegacyTextMatches(data: { title: string; description: string; district?: string; domain?: string }, problems: any[]) {
+    const stopWords = new Set(['about', 'after', 'also', 'from', 'have', 'into', 'more', 'that', 'their', 'there', 'this', 'with']);
+    const tokenize = (value: string) => new Set(
+      value.toLowerCase().match(/[a-z0-9]{4,}/g)?.filter((word) => !stopWords.has(word)) || []
+    );
+    const candidateWords = tokenize(`${data.title} ${data.description}`);
+
+    return problems
+      .filter((problem: any) => !Array.isArray(problem.embedding) || problem.embedding.length === 0)
+      .map((problem: any) => {
+        const problemWords = tokenize(`${problem.title} ${problem.description}`);
+        const sharedWords = [...candidateWords].filter((word) => problemWords.has(word)).length;
+        const unionSize = new Set([...candidateWords, ...problemWords]).size;
+        const lexicalScore = unionSize ? Math.round((sharedWords / unionSize) * 100) : 0;
+        const sameContext = data.district && data.district === problem.district && data.domain === problem.domain;
+        const similarity = Math.min(100, lexicalScore + (sameContext ? 15 : 0));
+
+        return {
+          problemId: problem.id,
+          title: problem.title,
+          similarity,
+          district: problem.district,
+        };
+      })
+      .filter((match) => match.similarity >= 75);
   }
 
   async analyzeProblem(data: {
@@ -144,29 +246,12 @@ Return a strict JSON object with:
       const rawText = await gemini.generateContent(prompt);
       const parsed = JSON.parse(rawText);
 
-      // Semantic Deduplication via embeddings
-      const currentEmbedding = await gemini.embedContent(data.description);
-      const allProblems = await problemsService.getAllProblems({});
-
-      const duplicateMatches = allProblems
-        .filter((p: any) => p.embedding && p.embedding.length > 0)
-        .map((p: any) => ({
-          problemId: p.id,
-          title: p.title,
-          similarity: Math.round(cosineSimilarity(currentEmbedding, p.embedding) * 100),
-          district: p.district,
-        }))
-        .filter((match: any) => match.similarity >= 75) // Threshold for duplicate
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 3);
-
       return {
         ...parsed,
-        embedding: currentEmbedding,
-        duplicateMatches,
+        duplicateMatches: [],
       };
     } catch (err: any) {
-      logger.error('Gemini AI analysis error:', err.message);
+      logger.error('AI analysis error:', err.message);
       return this.heuristicFallback(data);
     }
   }
@@ -226,7 +311,7 @@ Return a strict JSON response matching the Proposal schema...`;
       const rawText = await gemini.generateContent(prompt);
       return JSON.parse(rawText);
     } catch (err: any) {
-      logger.error('Gemini proposal generation error:', err.message);
+      logger.error('AI proposal generation error:', err.message);
       return this.proposalHeuristicFallback(problem, hei);
     }
   }

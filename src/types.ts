@@ -89,6 +89,7 @@ export interface AIAnalysisResult {
   nepRelevance: string;
   estimatedBudgetBand: string;
   socialImpactPotential: string;
+  embedding?: number[];
 }
 
 export interface ProblemStatement {

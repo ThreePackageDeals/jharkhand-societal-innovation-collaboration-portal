@@ -8,6 +8,7 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage } from '../LanguageContext';
 
 interface LocationPickerMapProps {
   latitude: number;
@@ -52,22 +53,23 @@ export const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   longitude,
   onLocationChange,
 }) => {
+  const { t } = useLanguage();
   const position = useMemo<L.LatLngExpression>(() => [latitude, longitude], [latitude, longitude]);
 
   return (
     <div className="mt-3 overflow-hidden border border-stone-300 bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-stone-200 bg-[#FAF7F2] px-3 py-2">
         <span className="text-[9px] font-bold uppercase tracking-wider text-stone-600">
-          Pin the challenge location
+          {t('map.pin_location')}
         </span>
-        <span className="text-[10px] text-stone-500">Click map or drag pin</span>
+        <span className="text-[10px] text-stone-500">{t('map.click_or_drag')}</span>
       </div>
       <MapContainer
         center={position}
         zoom={14}
         scrollWheelZoom={false}
         className="h-52 w-full"
-        aria-label="Interactive map for selecting the challenge location"
+        aria-label={t('map.interactive_label')}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

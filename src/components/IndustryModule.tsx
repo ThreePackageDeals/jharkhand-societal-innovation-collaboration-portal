@@ -303,7 +303,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                   </span>
                 </div>
                 <h4 className="font-editorial-serif text-2xl font-bold text-stone-900 mb-1">{partner.name}</h4>
-                <div className="text-xs text-stone-500 font-serif italic mb-4">HQ: {partner.headquarters}</div>
+                <div className="text-xs text-stone-500 font-serif italic mb-4">{t('ind.hq')} {partner.headquarters}</div>
 
                 <div className="space-y-3 text-xs text-stone-600">
                   <div className="flex flex-col">
@@ -339,7 +339,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                 <IndianRupee className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">Total CSR Disbursed</div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">{t('ind.total_csr_disbursed')}</div>
                 <div className="font-editorial-serif text-3xl font-light text-stone-900">₹{totalPledgedLakhs.toFixed(1)} L</div>
               </div>
             </div>
@@ -348,7 +348,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                 <Target className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">Active SDG Pilots</div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">{t('ind.active_sdg_pilots')}</div>
                 <div className="font-editorial-serif text-3xl font-light text-stone-900">{proposals.filter(p => p.industryPartnerId).length}</div>
               </div>
             </div>
@@ -357,7 +357,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                 <FileCheck className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">MCA 135 Compliance</div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1">{t('ind.mca_compliance')}</div>
                 <div className="font-editorial-serif text-3xl font-light text-stone-900">100%</div>
               </div>
             </div>
@@ -371,11 +371,11 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b-2 border-stone-300 text-[10px] uppercase font-bold tracking-wider text-stone-500">
-                    <th className="py-3 px-4 font-bold">Corporate Partner</th>
-                    <th className="py-3 px-4 font-bold">Project Title</th>
-                    <th className="py-3 px-4 font-bold">University (HEI)</th>
-                    <th className="py-3 px-4 font-bold">Committed Grant</th>
-                    <th className="py-3 px-4 font-bold">Impact Status</th>
+                    <th className="py-3 px-4 font-bold">{t('ind.col_partner')}</th>
+                    <th className="py-3 px-4 font-bold">{t('ind.col_project')}</th>
+                    <th className="py-3 px-4 font-bold">{t('ind.col_hei')}</th>
+                    <th className="py-3 px-4 font-bold">{t('ind.col_grant')}</th>
+                    <th className="py-3 px-4 font-bold">{t('ind.col_status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-200 font-sans">
@@ -387,14 +387,14 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                       <td className="py-4 px-4 font-bold text-[#BC5434]">₹{(prop.budgetBreakdown.totalAmount / 100000).toFixed(1)} L</td>
                       <td className="py-4 px-4">
                         <span className="px-2.5 py-1 bg-[#1A1A1A] text-white text-[10px] font-bold uppercase tracking-wider">
-                          Active Pilot
+                          {t('ind.status_active_pilot')}
                         </span>
                       </td>
                     </tr>
                   ))}
                   {proposals.filter(p => p.industryPartnerId).length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-stone-500 font-serif italic text-sm">No CSR sponsorships recorded yet.</td>
+                      <td colSpan={5} className="py-12 text-center text-stone-500 font-serif italic text-sm">{t('ind.no_sponsorships')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -425,7 +425,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
               <div className="text-[10px] uppercase font-bold tracking-wider text-stone-500 mb-1.5">{t('ind_pledge_modal_title')}</div>
               <div className="font-editorial-serif text-2xl font-bold text-stone-900 leading-snug">{pledgingProposal.projectTitle}</div>
               <div className="text-xs text-stone-600 font-serif italic mt-2">
-                HEI: {pledgingProposal.heiName} <span className="mx-1">•</span> Lead: {pledgingProposal.facultyMentor.name}
+                {t('ind.hei_context')} {pledgingProposal.heiName} <span className="mx-1">•</span> {t('ind.lead_context')} {pledgingProposal.facultyMentor.name}
               </div>
             </div>
 
@@ -457,9 +457,9 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                   className="w-full accent-[#BC5434]"
                 />
                 <div className="flex justify-between text-[10px] font-serif italic text-stone-400 mt-2">
-                  <span>₹0.5 L (Seed)</span>
-                  <span>₹5.0 L (Prototype)</span>
-                  <span>₹15.0 L (Commercial Pilot)</span>
+                  <span>{t('ind.pledge_seed')}</span>
+                  <span>{t('ind.pledge_prototype')}</span>
+                  <span>{t('ind.pledge_commercial')}</span>
                 </div>
               </div>
 
@@ -471,7 +471,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                   type="text"
                   value={mentorName}
                   onChange={(e) => setMentorName(e.target.value)}
-                  placeholder="e.g. Chief Metallurgist / Lead Agronomist"
+                  placeholder={t('ind.mentor_placeholder')}
                   className="w-full px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
                 />
               </div>
@@ -484,7 +484,7 @@ export const IndustryModule: React.FC<IndustryModuleProps> = ({
                   type="text"
                   value={pilotSite}
                   onChange={(e) => setPilotSite(e.target.value)}
-                  placeholder="e.g. Jharia Colliery, Potka block, Ramgarh industrial cluster"
+                  placeholder={t('ind.site_placeholder')}
                   className="w-full px-3 py-2.5 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434]"
                 />
               </div>

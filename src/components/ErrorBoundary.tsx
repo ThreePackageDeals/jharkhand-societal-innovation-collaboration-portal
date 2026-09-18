@@ -1,7 +1,9 @@
 import React, { Component, ReactNode } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
+  t: (key: string) => string;
 }
 
 interface ErrorBoundaryState {
@@ -13,7 +15,7 @@ interface ErrorBoundaryState {
  * tree and every page goes blank until a hard reload. This boundary contains
  * the damage to a single recoverable error screen.
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundaryView extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public props: ErrorBoundaryProps;
   state: ErrorBoundaryState = { error: null };
 
@@ -40,9 +42,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="w-16 h-16 bg-[#FAF7F2] border border-stone-300 rounded-full flex items-center justify-center mb-6 mx-auto">
               <span className="text-2xl">⚠️</span>
             </div>
-            <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">Something went wrong</h2>
+            <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">{this.props.t('error.something_wrong')}</h2>
             <p className="text-stone-500 font-serif italic mb-6">
-              This page hit an unexpected error. Reload to continue, or go back to the home page.
+              {this.props.t('error.unexpected_page')}
             </p>
             <div className="text-[10px] font-mono text-stone-400 mb-8 bg-stone-100 border border-stone-200 px-3 py-2 rounded text-left break-all">
               {this.state.error.message}
@@ -52,13 +54,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={() => window.location.reload()}
                 className="bg-[#1A1A1A] hover:bg-black text-white text-xs font-bold uppercase tracking-widest px-6 py-3 transition-colors cursor-pointer"
               >
-                Reload
+                {this.props.t('common.reload')}
               </button>
               <button
                 onClick={() => window.location.assign('/')}
                 className="text-xs font-bold uppercase tracking-widest text-stone-600 hover:text-stone-900 px-6 py-3 transition-colors cursor-pointer"
               >
-                Go to Home
+                {this.props.t('common.go_home')}
               </button>
             </div>
           </div>
@@ -68,4 +70,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return children;
   }
+}
+
+export function ErrorBoundary({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
+  return <ErrorBoundaryView t={t} children={children} />;
 }

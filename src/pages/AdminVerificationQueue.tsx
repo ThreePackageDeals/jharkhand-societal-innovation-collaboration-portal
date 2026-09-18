@@ -70,7 +70,7 @@ export const AdminVerificationQueue = () => {
         documentUrls: Array.isArray(row.documentUrls) ? row.documentUrls : [],
         createdAt: row.createdAt,
         user: {
-          fullName: row.user?.fullName || 'Unknown User',
+          fullName: row.user?.fullName || t('admin.unknown_user'),
           email: row.user?.email || '',
           district: row.user?.district || '',
         },
@@ -101,7 +101,7 @@ export const AdminVerificationQueue = () => {
       // Refresh list
       await fetchRequests();
     } catch (err: any) {
-      alert(`Error updating status: ${err.message}`);
+      alert(t('admin.update_error', err.message));
     } finally {
       setIsUpdating(null);
     }
@@ -191,15 +191,21 @@ export const AdminVerificationQueue = () => {
                     </td>
                     <td className="p-4">
                       <span className="px-2 py-1 bg-stone-100 text-stone-700 text-[10px] font-bold uppercase tracking-wider rounded-sm border border-stone-200">
-                        {req.role}
+                        {req.role === 'FACULTY'
+                          ? t('admin.role_faculty')
+                          : req.role === 'INDUSTRY_REP'
+                            ? t('admin.role_industry')
+                            : req.role === 'UNIVERSITY_ADMIN'
+                              ? t('admin.role_university')
+                              : req.role}
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-stone-900">
-                        {req.university?.name || req.organization?.name || 'N/A'}
+                        {req.university?.name || req.organization?.name || t('admin.na')}
                       </div>
                       <div className="text-[10px] text-stone-500 uppercase tracking-widest">
-                        {req.university ? 'University' : req.organization ? 'Industry' : 'Independent'}
+                        {req.university ? t('admin.university') : req.organization ? t('admin.industry') : t('admin.independent')}
                       </div>
                     </td>
                     <td className="p-4">
@@ -211,13 +217,13 @@ export const AdminVerificationQueue = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 bg-white border border-stone-300 text-stone-600 hover:text-[#BC5434] hover:border-[#BC5434] rounded-sm transition-colors cursor-pointer"
-                            title={`Document ${idx + 1}`}
+                            title={t('admin.document', idx + 1)}
                           >
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         ))}
                         {req.documentUrls.length === 0 && (
-                          <span className="text-[10px] text-stone-400 italic">No docs provided</span>
+                          <span className="text-[10px] text-stone-400 italic">{t('admin.no_docs')}</span>
                         )}
                       </div>
                     </td>
@@ -227,7 +233,7 @@ export const AdminVerificationQueue = () => {
                           onClick={() => handleUpdateStatus(req.id, 'REJECTED')}
                           disabled={isUpdating === req.id}
                           className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-all cursor-pointer disabled:opacity-50"
-                          title="Reject Request"
+                          title={t('admin.reject_title')}
                         >
                           <X className="h-5 w-5" />
                         </button>
@@ -235,7 +241,7 @@ export const AdminVerificationQueue = () => {
                           onClick={() => handleUpdateStatus(req.id, 'VERIFIED')}
                           disabled={isUpdating === req.id}
                           className="p-2 text-stone-400 hover:text-green-600 hover:bg-green-50 rounded-sm transition-all cursor-pointer disabled:opacity-50"
-                          title="Verify Applicant"
+                          title={t('admin.verify_title')}
                         >
                           <Check className="h-5 w-5" />
                         </button>

@@ -98,11 +98,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Samadhan.JH
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-[2px] text-[#BC5434] hidden sm:inline">
-                  Societal Innovation
+                  {t('navbar.logo_subtitle')}
                 </span>
               </div>
               <p className="text-[11px] text-stone-400 font-serif italic hidden md:block">
-                Grassroots Challenges • Academic Research • Industry CSR Co-Development
+                {t('navbar.logo_description')}
               </p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <input
               id="tracking-search-input"
               type="text"
-              placeholder="Track Challenge ID (e.g. JH-RNC...)"
+              placeholder={t('navbar.track_placeholder')}
               value={trackingInput}
               onChange={(e) => setTrackingInput(e.target.value)}
               className="w-full bg-stone-900 text-xs text-stone-100 placeholder-stone-500 pl-8 pr-3 py-2 border border-stone-700 focus:outline-none focus:border-[#BC5434] transition-colors"
@@ -125,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenNotifications}
               className="relative p-2 text-stone-400 hover:text-white transition-colors cursor-pointer"
-              title="Notifications & Communications"
+              title={t('navbar.notifications_title')}
             >
               <Bell className="w-5 h-5" />
               {unreadNotificationsCount > 0 && (

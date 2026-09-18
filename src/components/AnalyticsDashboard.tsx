@@ -230,7 +230,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5 text-[11px]">
-                <span className="text-stone-400 uppercase tracking-wider text-[10px]">Sort:</span>
+                <span className="text-stone-400 uppercase tracking-wider text-[10px]">{t('ana.sort')}</span>
                 <button
                   onClick={() => setSelectedSortBy('challenges')}
                   className={`px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider cursor-pointer border ${
@@ -325,7 +325,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     {t('ana.solved_by')}
                   </span>
                   <span className="text-[11px] font-bold text-stone-900">
-                    {p.assignedHeiName || 'Community Solution'}
+                    {p.assignedHeiName || t('ana.community_solution')}
                   </span>
                 </div>
               </div>
