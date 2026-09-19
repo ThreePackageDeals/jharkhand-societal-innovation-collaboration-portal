@@ -19,7 +19,7 @@ export const AuthPage = () => {
   const [registrationToken, setRegistrationToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, completeProfile, bypassLogin, logout } = useAuth();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -164,6 +164,23 @@ export const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex items-center justify-center p-4 font-sans">
+      <button
+        type="button"
+        onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+        className="fixed top-6 left-6 z-50 w-20 h-9 bg-stone-200 rounded-full p-1 cursor-pointer transition-all duration-300 hover:bg-stone-300 shadow-sm border border-stone-300"
+        title={t('language_toggle')}
+        aria-label={t('language_toggle')}
+      >
+        <span
+          className={`absolute top-1 left-1 w-9 h-7 rounded-full shadow-sm transition-transform duration-300 ease-in-out ${
+            language === 'en' ? 'translate-x-0 bg-white' : 'translate-x-9 bg-[#BC5434]'
+          }`}
+        />
+        <span className="relative z-10 flex justify-between items-center h-full px-2 text-[10px] font-bold uppercase tracking-wider">
+          <span className={language === 'en' ? 'text-stone-900' : 'text-stone-500'}>EN</span>
+          <span className={language === 'hi' ? 'text-white' : 'text-stone-500'}>HI</span>
+        </span>
+      </button>
       <div className="max-w-md w-full bg-white border border-stone-200 rounded-sm shadow-sm p-8">
         <button
           type="button"
@@ -223,8 +240,14 @@ export const AuthPage = () => {
             <button
               type="button"
               onClick={() => window.location.assign('/api/auth/google')}
-              className="w-full p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer"
+              className="w-full p-3 border border-stone-300 rounded-sm hover:bg-stone-50 transition-colors text-xs font-bold uppercase tracking-wider text-stone-600 cursor-pointer inline-flex items-center justify-center gap-3"
             >
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M21.35 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.7 2.91-4.2 2.91-7.42Z" />
+                <path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.7-1.72-5.47-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.75Z" />
+                <path fill="#FBBC05" d="M6.53 13.83A5.86 5.86 0 0 1 6.22 12c0-.64.11-1.26.31-1.83V7.64H3.29A9.74 9.74 0 0 0 2.25 12c0 1.57.38 3.06 1.04 4.36l3.24-2.53Z" />
+                <path fill="#EA4335" d="M12 6.14c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.23 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.39l3.24 2.53C7.3 7.86 9.46 6.14 12 6.14Z" />
+              </svg>
               {t('auth.google_oauth')}
             </button>
             <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-stone-400">

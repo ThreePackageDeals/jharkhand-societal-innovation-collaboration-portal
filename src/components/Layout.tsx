@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Loader2, Bell, MessageCircle, LogIn, LogOut, UserRound } from 'lucide-react';
+import { Loader2, Bell, MessageCircle, LogIn, LogOut, UserRound, Link2 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 import { useAuth } from '../AuthContext';
 import { useAppContext } from '../AppContext';
@@ -61,19 +61,39 @@ export function Layout() {
       <div className="fixed top-6 right-6 z-50 flex items-center gap-2">
         {!isAuthLoading && (
           user ? (
-            <button
-              type="button"
-              onClick={() => {
-                logout();
-                navigate('/auth', { replace: true });
-              }}
-              className="inline-flex items-center gap-2 border border-stone-300 bg-white px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-stone-700 shadow-md transition-colors hover:border-[#BC5434] hover:text-[#BC5434] cursor-pointer"
-              title={t('common.signed_in_as', user.email)}
-            >
-              <UserRound className="h-4 w-4" />
-              <span className="hidden sm:inline">{user.fullName || t('common.account')}</span>
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
+            <>
+              {!user.accountConnections?.google && user.id !== 'dev-user-id' && (
+                <button
+                  type="button"
+                  onClick={() => window.location.assign('/api/auth/google/link')}
+                  className="inline-flex items-center gap-2 border border-stone-300 bg-white px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-stone-700 shadow-md transition-colors hover:border-[#BC5434] hover:text-[#BC5434] cursor-pointer"
+                  title={t('common.connect_google')}
+                >
+                  <Link2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('common.connect_google')}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate('/account')}
+                className="inline-flex items-center gap-2 border border-stone-300 bg-white px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-stone-700 shadow-md transition-colors hover:border-[#BC5434] hover:text-[#BC5434] cursor-pointer"
+                title={t('common.view_account')}
+              >
+                <UserRound className="h-4 w-4" />
+                <span className="hidden sm:inline">{user.fullName || t('common.account')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate('/auth', { replace: true });
+                }}
+                className="inline-flex items-center border border-stone-300 bg-white p-2.5 text-stone-600 shadow-md transition-colors hover:border-[#BC5434] hover:text-[#BC5434] cursor-pointer"
+                title={t('common.sign_out')}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </>
           ) : (
             <button
               type="button"

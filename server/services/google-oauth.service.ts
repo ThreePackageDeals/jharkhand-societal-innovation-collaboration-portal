@@ -5,6 +5,7 @@ interface GoogleTokenResponse {
 }
 
 interface GoogleUserInfo {
+  sub?: string;
   email?: string;
   email_verified?: boolean;
   name?: string;
@@ -52,10 +53,10 @@ export class GoogleOAuthService {
     if (!profileResponse.ok) throw new Error('Could not retrieve your Google account information');
 
     const profile = await profileResponse.json() as GoogleUserInfo;
-    if (!profile.email || profile.email_verified !== true) {
+    if (!profile.sub || !profile.email || profile.email_verified !== true) {
       throw new Error('A verified Google email address is required');
     }
-    return { email: profile.email.toLowerCase(), name: profile.name };
+    return { subject: profile.sub, email: profile.email.toLowerCase(), name: profile.name };
   }
 }
 

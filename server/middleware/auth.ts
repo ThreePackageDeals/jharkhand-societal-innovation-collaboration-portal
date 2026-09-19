@@ -10,8 +10,13 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
   // Bypass authentication if AUTH_BYPASS is explicitly set to 'true'
-  if (process.env.AUTH_BYPASS === 'true') {
+  // only for requests that do not provide a real bearer token. This keeps
+  // local development convenient without replacing Google/OTP sessions with
+  // the fake development user.
+  if (process.env.AUTH_BYPASS === 'true' && !authHeader) {
     req.user = {
       userId: 'dev-user-id',
       email: 'dev@localhost',
@@ -20,8 +25,6 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     };
     return next();
   }
-
-  const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return sendError(res, 'Authentication token required', 401, 'UNAUTHORIZED');

@@ -11,7 +11,6 @@ export default function CommunicationPage() {
   const {
     notifications,
     problems,
-    userRole,
     setSelectedProblem,
   } = useAppContext();
 
@@ -30,7 +29,6 @@ export default function CommunicationPage() {
       <CommunicationHub
         notifications={notifications}
         problems={problems}
-        userRole={userRole}
         onViewProblemDetails={(problem) => {
           setSelectedProblem(problem);
         }}

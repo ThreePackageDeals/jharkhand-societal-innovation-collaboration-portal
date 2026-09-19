@@ -5,12 +5,18 @@ interface UserProfile {
   id: string;
   email: string;
   fullName: string;
+  phone?: string;
   role: Role;
   verificationStatus: VerificationStatus;
   district?: string;
   studentProfile?: any;
   facultyProfile?: any;
   industryProfile?: any;
+  accountConnections?: {
+    email: boolean;
+    phone: boolean;
+    google: boolean;
+  };
 }
 
 interface AuthContextType {

@@ -14,6 +14,7 @@ import { AuthProvider } from './AuthContext';
 import { AuthPage } from './pages/AuthPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminVerificationQueue } from './pages/AdminVerificationQueue';
+import AccountPage from './pages/AccountPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Role } from './types';
 
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/lifecycle" element={<><ScrollToTop /><LifecyclePage /></>} />
           <Route path="/analytics" element={<ProtectedRoute allowedRoles={['GOVT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AnalyticsPage /></></ProtectedRoute>} />
           <Route path="/communication" element={<><ScrollToTop /><CommunicationPage /></>} />
+          <Route path="/account" element={<ProtectedRoute><><ScrollToTop /><AccountPage /></></ProtectedRoute>} />
           <Route path="/verification-queue" element={<ProtectedRoute allowedRoles={['UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AdminVerificationQueue /></></ProtectedRoute>} />
         </Route>
       </Routes>

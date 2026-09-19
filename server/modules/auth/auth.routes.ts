@@ -39,17 +39,42 @@ router.get('/google', (req, res) => {
   }
 });
 
+router.get('/google/link', authenticate, (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.userId || req.user.userId === 'dev-user-id') {
+      throw new Error('A registered account is required to link Google');
+    }
+    const state = authService.createGoogleOAuthState('google-link', req.user.userId);
+    res.cookie(googleStateCookie, state, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: ENV.NODE_ENV === 'production',
+      maxAge: 10 * 60 * 1000,
+      path: '/api/auth/google',
+    });
+    return res.redirect(googleOAuthService.createAuthorizationUrl(state));
+  } catch (err: any) {
+    return redirectToAuth(res, 'google_error', err.message);
+  }
+});
+
 router.get('/google/callback', async (req, res) => {
   res.clearCookie(googleStateCookie, { path: '/api/auth/google' });
   try {
     const code = typeof req.query.code === 'string' ? req.query.code : undefined;
     const state = typeof req.query.state === 'string' ? req.query.state : undefined;
     const cookieState = readCookie(req.headers.cookie, googleStateCookie);
-    if (!code || !state || state !== cookieState || !authService.verifyGoogleOAuthState(state)) {
+    const statePayload = state ? authService.readGoogleOAuthState(state) : null;
+    if (!code || !state || state !== cookieState || !statePayload) {
       throw new Error('Google sign-in session is invalid or has expired');
     }
     const googleUser = await googleOAuthService.getVerifiedUser(code);
-    const accessToken = await authService.loginWithGoogle(googleUser.email);
+    if (statePayload.purpose === 'google-link') {
+      if (!statePayload.userId) throw new Error('Google linking session is invalid');
+      await authService.linkGoogleAccount(statePayload.userId, googleUser.email, googleUser.subject);
+      return res.redirect(new URL('/', ENV.APP_URL || `http://localhost:${ENV.PORT}`).toString());
+    }
+    const accessToken = await authService.loginWithGoogle(googleUser.email, googleUser.subject, googleUser.name);
     return redirectToAuth(res, 'google_token', accessToken);
   } catch (err: any) {
     return redirectToAuth(res, 'google_error', err.message || 'Google sign-in failed');
@@ -115,7 +140,9 @@ router.post('/verify-sheerid', async (req, res) => {
 router.get('/me', authenticate, async (req: AuthRequest, res) => {
   const userId = req.user?.userId;
   try {
-    const user = await authService.getMe(userId);
+    const authHeader = req.headers.authorization;
+    const useDevUser = !authHeader || authHeader === 'Bearer dev-bypass-token';
+    const user = await authService.getMe(userId, useDevUser);
     sendResponse(res, user);
   } catch (err: any) {
     sendError(res, err.message);

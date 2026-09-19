@@ -3,28 +3,24 @@ import { useSearchParams } from 'react-router-dom';
 import {
   MessageSquare,
   Search,
-  Users,
   Building2,
-  GraduationCap,
   FileText,
   Clock,
   ArrowRight,
   Bell
 } from 'lucide-react';
-import { SystemNotification, ProblemStatement, SubmitterRole } from '../types';
+import { SystemNotification, ProblemStatement } from '../types';
 import { useLanguage } from '../LanguageContext';
 
 interface CommunicationHubProps {
   notifications: SystemNotification[];
   problems: ProblemStatement[];
-  userRole: 'citizen' | 'university' | 'industry' | 'admin';
   onViewProblemDetails: (problem: ProblemStatement) => void;
 }
 
 export const CommunicationHub: React.FC<CommunicationHubProps> = ({
   notifications,
   problems,
-  userRole,
   onViewProblemDetails
 }) => {
   const { t } = useLanguage();
@@ -45,19 +41,6 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
     setActiveSubTab(tab);
     setSearchParams({ tab });
   };
-
-  // Map user role for UI
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'citizen': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('navbar_role_citizen') };
-      case 'university': return { bg: 'bg-[#FAF7F2] text-stone-900 border-stone-300', label: t('navbar_role_university') };
-      case 'industry': return { bg: 'bg-[#FAF7F2] text-[#BC5434] border-stone-300', label: t('navbar_role_industry') };
-      case 'admin': return { bg: 'bg-stone-800 text-white border-stone-800', label: t('navbar_role_admin') };
-      default: return { bg: 'bg-stone-100 text-stone-700 border-stone-300', label: role };
-    }
-  };
-
-  const badge = getRoleBadge(userRole);
 
   const timeAgo = (dateStr: string) => {
     const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -97,15 +80,6 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({
             <p className="text-xs text-stone-400 font-serif italic max-w-2xl mt-2 leading-relaxed">
               {t('comm_hub.center_desc')}
             </p>
-          </div>
-
-          <div className="flex items-center gap-4 bg-stone-900 border border-stone-800 p-4">
-             <div className="text-right">
-                <span className="text-[10px] text-stone-400 block font-serif italic mb-1">{t('comm_hub.session')}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${badge.bg}`}>
-                  {badge.label}
-                </span>
-             </div>
           </div>
         </div>
       </div>

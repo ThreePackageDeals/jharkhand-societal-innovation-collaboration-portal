@@ -20,6 +20,12 @@ interface RegistrationTokenPayload {
   userId?: string;
 }
 
+interface GoogleOAuthStatePayload {
+  purpose: 'google-oauth' | 'google-link';
+  nonce: string;
+  userId?: string;
+}
+
 export class AuthService {
   async sendOtp(identifier: string) {
     return otpService.sendOtp(identifier);
@@ -34,23 +40,60 @@ export class AuthService {
     };
   }
 
-  createGoogleOAuthState() {
-    return jwt.sign({ purpose: 'google-oauth', nonce: randomUUID() }, ENV.JWT_SECRET, { expiresIn: '10m' });
+  createGoogleOAuthState(purpose: 'google-oauth' | 'google-link' = 'google-oauth', userId?: string) {
+    return jwt.sign({ purpose, nonce: randomUUID(), userId }, ENV.JWT_SECRET, { expiresIn: '10m' });
   }
 
   verifyGoogleOAuthState(state: string) {
+    return Boolean(this.readGoogleOAuthState(state));
+  }
+
+  readGoogleOAuthState(state: string): GoogleOAuthStatePayload | null {
     try {
-      const payload = jwt.verify(state, ENV.JWT_SECRET) as { purpose?: string };
-      return payload.purpose === 'google-oauth';
+      const payload = jwt.verify(state, ENV.JWT_SECRET) as Partial<GoogleOAuthStatePayload>;
+      if ((payload.purpose !== 'google-oauth' && payload.purpose !== 'google-link') || !payload.nonce) return null;
+      return payload as GoogleOAuthStatePayload;
     } catch {
-      return false;
+      return null;
     }
   }
 
-  async loginWithGoogle(email: string) {
-    const user = await prisma.user.findUnique({ where: { email } });
+  async loginWithGoogle(email: string, googleSubject: string, googleName?: string) {
+    const linkedUser = await prisma.user.findUnique({ where: { googleSubject } });
+    const emailUser = await prisma.user.findUnique({ where: { email } });
+    if (linkedUser && emailUser && linkedUser.id !== emailUser.id) {
+      throw new Error('This Google account and email belong to different portal accounts');
+    }
+    const user = linkedUser || emailUser;
     if (!user || !user.isActive) throw new Error('No active portal account is registered for this Google email');
-    return this.issueAccessToken(user);
+
+    const updatedUser = user.googleSubject === googleSubject
+      ? user
+      : await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleSubject,
+            ...(user.fullName ? {} : { fullName: googleName || user.fullName }),
+          },
+        });
+    return this.issueAccessToken(updatedUser);
+  }
+
+  async linkGoogleAccount(userId: string, email: string, googleSubject: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) throw new Error('Portal account not found');
+
+    const existingGoogleUser = await prisma.user.findUnique({ where: { googleSubject } });
+    if (existingGoogleUser && existingGoogleUser.id !== userId) {
+      throw new Error('This Google account is already linked to another portal account');
+    }
+    const existingEmailUser = await prisma.user.findUnique({ where: { email } });
+    if (existingEmailUser && existingEmailUser.id !== userId) {
+      throw new Error('This Google email is already connected to another portal account');
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { googleSubject } });
+    return { linked: true, email };
   }
 
   async completeProfile(userId: string, data: {
@@ -82,13 +125,17 @@ export class AuthService {
         role,
         phone,
         district,
+        emailVerifiedAt: new Date(),
+        phoneVerifiedAt: new Date(),
       },
       create: {
         id: userId,
         email,
+        emailVerifiedAt: new Date(),
         fullName,
         role,
         phone,
+        phoneVerifiedAt: new Date(),
         district,
         verificationStatus: 'NOT_REQUIRED',
       },
@@ -234,8 +281,8 @@ export class AuthService {
     };
   }
 
-  async getMe(userId: string) {
-    if (userId === 'dev-user-id') {
+  async getMe(userId: string, useDevUser = false) {
+    if (useDevUser && userId === 'dev-user-id') {
       return {
         id: 'dev-user-id',
         email: 'dev@localhost',
@@ -250,8 +297,8 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        studentProfile: true,
-        facultyProfile: true,
+        studentProfile: { include: { university: true } },
+        facultyProfile: { include: { university: true } },
         industryProfile: {
           include: { organization: true }
         }
@@ -259,7 +306,15 @@ export class AuthService {
     });
     if (!user) throw new Error('User not found');
 
-    return user;
+    const { googleSubject, ...safeUser } = user;
+    return {
+      ...safeUser,
+      accountConnections: {
+        email: Boolean(user.email && user.emailVerifiedAt),
+        phone: Boolean(user.phone && user.phoneVerifiedAt),
+        google: Boolean(googleSubject),
+      },
+    };
   }
 
   recordOtpVerification(existingToken: string | undefined, identifier: string, channel: 'email' | 'sms') {
@@ -330,7 +385,7 @@ export class AuthService {
   }
 
   async verifyToken(token: string): Promise<TokenPayload> {
-    if (token === 'mock-jwt-token') {
+    if (token === 'mock-jwt-token' || token === 'dev-bypass-token') {
       return {
         userId: 'dev-user-id',
         email: 'dev@localhost',
