@@ -35,15 +35,15 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<><ScrollToTop /><HomePage /></>} />
           <Route path="/challenges" element={<><ScrollToTop /><ChallengesPage /></>} />
-          <Route path="/submit-challenge" element={<><ScrollToTop /><SubmitChallengePage /></>} />
-          <Route path="/ai-triage" element={<ProtectedRoute allowedRoles={['GOVT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AITriagePage /></></ProtectedRoute>} />
-          <Route path="/university" element={<ProtectedRoute allowedRoles={['STUDENT', 'FACULTY', 'UNIVERSITY_ADMIN', 'GOVT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><UniversityPage /></></ProtectedRoute>} />
-          <Route path="/industry" element={<ProtectedRoute allowedRoles={['INDUSTRY_REP', 'GOVT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><IndustryPage /></></ProtectedRoute>} />
-          <Route path="/lifecycle" element={<><ScrollToTop /><LifecyclePage /></>} />
-          <Route path="/analytics" element={<ProtectedRoute allowedRoles={['GOVT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AnalyticsPage /></></ProtectedRoute>} />
+          <Route path="/submit-challenge" element={<ProtectedRoute allowedRoles={['CITIZEN']}><><ScrollToTop /><SubmitChallengePage /></></ProtectedRoute>} />
+          <Route path="/ai-triage" element={<ProtectedRoute allowedRoles={['GOVERNMENT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AITriagePage /></></ProtectedRoute>} />
+          <Route path="/university" element={<ProtectedRoute allowedRoles={['STUDENT', 'FACULTY']}><><ScrollToTop /><UniversityPage /></></ProtectedRoute>} />
+          <Route path="/industry" element={<ProtectedRoute allowedRoles={['INDUSTRY_REP']}><><ScrollToTop /><IndustryPage /></></ProtectedRoute>} />
+          <Route path="/lifecycle" element={<ProtectedRoute><><ScrollToTop /><LifecyclePage /></></ProtectedRoute>} />
+          <Route path="/analytics" element={<><ScrollToTop /><AnalyticsPage /></>} />
           <Route path="/communication" element={<><ScrollToTop /><CommunicationPage /></>} />
           <Route path="/account" element={<ProtectedRoute><><ScrollToTop /><AccountPage /></></ProtectedRoute>} />
-          <Route path="/verification-queue" element={<ProtectedRoute allowedRoles={['UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'SUPER_ADMIN']}><><ScrollToTop /><AdminVerificationQueue /></></ProtectedRoute>} />
+          <Route path="/verification-queue" element={<ProtectedRoute allowedRoles={['UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL', 'SUPER_ADMIN']}><><ScrollToTop /><AdminVerificationQueue /></></ProtectedRoute>} />
         </Route>
       </Routes>
       </ErrorBoundary>

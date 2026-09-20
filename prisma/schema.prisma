@@ -20,6 +20,7 @@ enum Role {
   INDUSTRY_REP
   UNIVERSITY_ADMIN
   GOVERNMENT_ADMIN
+  GOVERNMENT_OFFICIAL
   SUPER_ADMIN
 }
 
@@ -51,6 +52,8 @@ model User {
   role               Role
   verificationStatus VerificationStatus @default(NOT_REQUIRED)
   district           String?            // citizens: for Jharkhand geo-targeting/dashboards
+  citizenSubmitterType String?         // citizens: entity type (citizen/community_group/gram_panchayat/urban_local_body)
+
   avatarUrl          String?
   isActive           Boolean            @default(true)
   // OTP values are stored as keyed hashes; never persist a raw verification code.

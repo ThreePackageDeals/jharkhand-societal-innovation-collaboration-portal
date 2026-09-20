@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Loader2, Bell, MessageCircle, LogIn, LogOut, UserRound, Link2 } from 'lucide-react';
+import { Loader2, Bell, MessageCircle, LogIn, LogOut, UserRound, Link2, TestTube } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 import { useAuth } from '../AuthContext';
 import { useAppContext } from '../AppContext';
 import { NotificationPanel } from './NotificationPanel';
 import { ProblemDetailsModal } from './ProblemDetailsModal';
 import { VerificationBanner } from './VerificationBanner';
+import { DevLoginPanel } from './DevLoginPanel';
 
 export function Layout() {
   const { language, setLanguage, t } = useLanguage();
-  const { user, isLoading: isAuthLoading, logout } = useAuth();
+  const { user, isLoading: isAuthLoading, logout, devLogin } = useAuth();
   const navigate = useNavigate();
+  const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const {
     isLoading,
     isNotificationOpen,
@@ -26,6 +28,9 @@ export function Layout() {
     handleUpvote,
     userRole,
   } = useAppContext();
+
+  // Show dev login button only in development
+  const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex flex-col font-sans selection:bg-[#BC5434]/20 selection:text-[#1A1A1A]">
@@ -59,10 +64,23 @@ export function Layout() {
 
       {/* Account and notification controls */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-2">
+        {/* Dev Login Button (only in development) */}
+        {isDevelopment && !user && (
+          <button
+            type="button"
+            onClick={() => setIsDevPanelOpen(true)}
+            className="inline-flex items-center gap-2 bg-[#BC5434] text-white px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider shadow-md transition-colors hover:bg-[#A3452B] cursor-pointer"
+            title="Dev Login (Testing Only)"
+          >
+            <TestTube className="h-4 w-4" />
+            <span>DEV LOGIN</span>
+          </button>
+        )}
+
         {!isAuthLoading && (
           user ? (
             <>
-              {!user.accountConnections?.google && user.id !== 'dev-user-id' && (
+              {!user.accountConnections?.google && user.id !== 'dev-user-id' && !user.id.startsWith('dev-') && (
                 <button
                   type="button"
                   onClick={() => window.location.assign('/api/auth/google/link')}
@@ -149,6 +167,12 @@ export function Layout() {
           setIsNotificationOpen(false);
           navigate('/communication?tab=inbox');
         }}
+      />
+
+      <DevLoginPanel
+        isOpen={isDevPanelOpen}
+        onClose={() => setIsDevPanelOpen(false)}
+        onDevLogin={devLogin}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

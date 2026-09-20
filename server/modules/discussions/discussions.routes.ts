@@ -37,15 +37,13 @@ router.post('/', authenticate, async (req, res) => {
       GOVT_ADMIN: 'Government Admin',
       SUPER_ADMIN: 'Government Admin',
     };
-    const resolvedRole = process.env.AUTH_BYPASS === 'true' && allowedSenderRoles.has(senderRole)
-      ? senderRole
-      : roleFromAuth[user.role] || 'Citizen';
+    const resolvedRole = roleFromAuth[user.role] || 'Citizen';
     const newMessage = await discussionService.createMessage({
       problemId,
       message,
       senderName: typeof senderName === 'string' && senderName.trim()
         ? senderName.trim()
-        : user.name || 'Registered User',
+        : user.email || 'Registered User',
       senderRole: resolvedRole,
     });
 

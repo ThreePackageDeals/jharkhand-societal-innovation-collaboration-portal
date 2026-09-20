@@ -173,7 +173,7 @@ export interface Organization {
 }
 
 export type IndustryPartner = Organization;
-export type Role = 'CITIZEN' | 'STUDENT' | 'FACULTY' | 'INDUSTRY_REP' | 'UNIVERSITY_ADMIN' | 'GOVERNMENT_ADMIN' | 'SUPER_ADMIN' | 'GOVT_ADMIN';
+export type Role = 'CITIZEN' | 'STUDENT' | 'FACULTY' | 'INDUSTRY_REP' | 'UNIVERSITY_ADMIN' | 'GOVERNMENT_ADMIN' | 'GOVERNMENT_OFFICIAL' | 'SUPER_ADMIN';
 export type VerificationStatus = 'NOT_REQUIRED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
 
 export interface ProjectMilestone {

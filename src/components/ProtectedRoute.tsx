@@ -45,7 +45,7 @@ export const ProtectedRoute = ({ children, allowedRoles, requireVerified }: Prot
     return (
       <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center p-4 text-center">
         <h2 className="font-editorial-serif text-3xl font-bold text-stone-900 mb-2">{t('verification.access_restricted')}</h2>
-        <p className="text-stone-500 font-serif italic mb-6">{t('verification.permission_denied')}</p>
+        <p className="text-stone-500 font-serif italic mb-6">You do not have access to this module</p>
         <button
           onClick={() => window.history.back()}
           className="bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-widest px-6 py-3 hover:bg-black transition-colors cursor-pointer"

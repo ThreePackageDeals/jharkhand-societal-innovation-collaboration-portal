@@ -18,7 +18,7 @@ export const AuthPage = () => {
   const [otpStatus, setOtpStatus] = useState<{ email: OtpStatus; phone: OtpStatus }>({ email: 'idle', phone: 'idle' });
   const [registrationToken, setRegistrationToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, completeProfile, bypassLogin, logout } = useAuth();
+  const { login, completeProfile, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +48,7 @@ export const AuthPage = () => {
     { id: 'STUDENT' as Role, label: t('auth.role_student_label'), icon: GraduationCap, description: t('auth.role_student_desc') },
     { id: 'FACULTY' as Role, label: t('auth.role_faculty_label'), icon: ShieldCheck, description: t('auth.role_faculty_desc') },
     { id: 'INDUSTRY_REP' as Role, label: t('auth.role_industry_label'), icon: Building2, description: t('auth.role_industry_desc') },
+    { id: 'GOVERNMENT_OFFICIAL' as Role, label: 'Government Official', icon: ShieldCheck, description: 'State/District government officials' },
   ];
 
   const handleRoleSelect = (role: Role) => {
@@ -118,7 +119,9 @@ export const AuthPage = () => {
       district: formData.get('district'),
     };
 
-    if (selectedRole === 'STUDENT' || selectedRole === 'FACULTY') {
+    if (selectedRole === 'CITIZEN') {
+      profileData.citizenSubmitterType = formData.get('citizenSubmitterType');
+    } else if (selectedRole === 'STUDENT' || selectedRole === 'FACULTY') {
       profileData.universityId = formData.get('universityId');
       profileData.department = formData.get('department');
       if (selectedRole === 'STUDENT') {
@@ -214,18 +217,6 @@ export const AuthPage = () => {
                   <ArrowRight className="ml-auto h-5 w-5 text-stone-300 group-hover:text-[#BC5434] transition-colors" />
                 </button>
               ))}
-            </div>
-            <div className="pt-6 border-t border-stone-100 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  bypassLogin();
-                  navigate(from, { replace: true });
-                }}
-                className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
-              >
-                {t('auth.dev_bypass')}
-              </button>
             </div>
           </div>
         )}
@@ -358,6 +349,25 @@ export const AuthPage = () => {
                 <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">{t('auth.district_label')}</label>
                 <input name="district" className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm" placeholder={t('auth.district_placeholder')} />
               </div>
+
+              {selectedRole === 'CITIZEN' && (
+                <div className="space-y-4 p-4 bg-[#FAF7F2] border border-stone-200 rounded-sm">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase font-bold tracking-widest text-stone-700">Citizen entity type</label>
+                    <select
+                      name="citizenSubmitterType"
+                      required
+                      defaultValue="citizen"
+                      className="w-full p-3 border border-stone-300 bg-white focus:outline-none focus:border-[#BC5434] text-sm"
+                    >
+                      <option value="citizen">Individual</option>
+                      <option value="community_group">Community Group</option>
+                      <option value="gram_panchayat">Panchayati Raj Institution</option>
+                      <option value="urban_local_body">Urban Local Body</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {selectedRole === 'STUDENT' && (
                 <div className="space-y-4 p-4 bg-[#FAF7F2] border border-stone-200 rounded-sm">

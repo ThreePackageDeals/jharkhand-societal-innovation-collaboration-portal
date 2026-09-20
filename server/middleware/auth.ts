@@ -3,8 +3,6 @@ import { authService, TokenPayload } from '../modules/auth/auth.service';
 import { sendError } from '../utils/apiResponse';
 import { Role, VerificationStatus } from '@prisma/client';
 
-type CompatRole = Role | 'GOVT_ADMIN';
-
 export interface AuthRequest extends Request {
   user?: TokenPayload;
 }
@@ -12,19 +10,6 @@ export interface AuthRequest extends Request {
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
-  // Bypass authentication if AUTH_BYPASS is explicitly set to 'true'
-  // only for requests that do not provide a real bearer token. This keeps
-  // local development convenient without replacing Google/OTP sessions with
-  // the fake development user.
-  if (process.env.AUTH_BYPASS === 'true' && !authHeader) {
-    req.user = {
-      userId: 'dev-user-id',
-      email: 'dev@localhost',
-      role: 'GOVT_ADMIN' as CompatRole,
-      verificationStatus: 'NOT_REQUIRED' as VerificationStatus,
-    };
-    return next();
-  }
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return sendError(res, 'Authentication token required', 401, 'UNAUTHORIZED');
@@ -41,15 +26,12 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
   }
 };
 
-export const requireRole = (...allowedRoles: CompatRole[]) => {
+export const requireRole = (...allowedRoles: Role[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (process.env.AUTH_BYPASS === 'true') {
-      return next();
-    }
-
     if (!req.user) {
       return sendError(res, 'User not authenticated', 401, 'UNAUTHORIZED');
     }
+
 
     if (!allowedRoles.includes(req.user.role)) {
       return sendError(
@@ -69,13 +51,10 @@ export const roleGuard = requireRole;
 
 export const requireVerified = () => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (process.env.AUTH_BYPASS === 'true') {
-      return next();
-    }
-
     if (!req.user) {
       return sendError(res, 'User not authenticated', 401, 'UNAUTHORIZED');
     }
+
 
     // CITIZENS are considered verified by default (NOT_REQUIRED)
     if (req.user.role === 'CITIZEN' || req.user.verificationStatus === 'VERIFIED' || req.user.verificationStatus === 'NOT_REQUIRED') {

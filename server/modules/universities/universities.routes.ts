@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', authenticate, requireRole('GOVT_ADMIN'), async (req, res) => {
+router.post('/', authenticate, requireRole('GOVERNMENT_ADMIN', 'UNIVERSITY_ADMIN'), async (req, res) => {
   try {
     const university = await universityService.createUniversity(req.body);
     sendResponse(res, university, 201);
@@ -44,7 +44,7 @@ router.post('/', authenticate, requireRole('GOVT_ADMIN'), async (req, res) => {
   }
 });
 
-router.patch('/:id', authenticate, requireRole('GOVT_ADMIN', 'UNIVERSITY_ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, requireRole('GOVERNMENT_ADMIN', 'UNIVERSITY_ADMIN'), async (req, res) => {
   try {
     const university = await universityService.updateUniversity(req.params.id, req.body);
     sendResponse(res, university);
@@ -53,7 +53,7 @@ router.patch('/:id', authenticate, requireRole('GOVT_ADMIN', 'UNIVERSITY_ADMIN')
   }
 });
 
-router.delete('/:id', authenticate, requireRole('GOVT_ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('GOVERNMENT_ADMIN'), async (req, res) => {
   try {
     await universityService.deleteUniversity(req.params.id);
     sendResponse(res, { success: true, message: 'University deleted' });

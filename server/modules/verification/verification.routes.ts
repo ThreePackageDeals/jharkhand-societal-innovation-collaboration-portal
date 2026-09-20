@@ -6,7 +6,7 @@ import { VerificationStatus } from '@prisma/client';
 
 const router = Router();
 
-router.get('/requests', authenticate, requireRole('UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'SUPER_ADMIN'), async (req: AuthRequest, res) => {
+router.get('/requests', authenticate, requireRole('UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL', 'SUPER_ADMIN'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.userId;
     const requests = await verificationService.getPendingRequests(userId);
@@ -16,7 +16,7 @@ router.get('/requests', authenticate, requireRole('UNIVERSITY_ADMIN', 'GOVERNMEN
   }
 });
 
-router.patch('/requests/:id', authenticate, requireRole('UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'SUPER_ADMIN'), async (req: AuthRequest, res) => {
+router.patch('/requests/:id', authenticate, requireRole('UNIVERSITY_ADMIN', 'GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL', 'SUPER_ADMIN'), async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.userId;
     const { status, notes } = req.body;

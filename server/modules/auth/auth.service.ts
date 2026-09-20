@@ -9,7 +9,7 @@ import { otpService } from '../../services/otp.service';
 export interface TokenPayload {
   userId: string;
   email: string;
-  role: Role | 'GOVT_ADMIN';
+  role: Role;
   verificationStatus: VerificationStatus;
 }
 
@@ -113,9 +113,16 @@ export class AuthService {
     website?: string;
     orgType?: OrgType;
     industryDesignation?: string;
+    citizenSubmitterType?: string;
     documentUrls?: string[];
   }) {
     const { role, email, fullName, phone, district, ...rest } = data;
+
+    // Enforce one account → one role: prevent role changes after initial registration
+    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (existingUser && existingUser.role && existingUser.role !== role) {
+      throw new Error('Cannot change role after account creation. Your account is registered as ' + existingUser.role);
+    }
 
     // 1. Create or update the base User record
     const user = await prisma.user.upsert({
@@ -125,9 +132,10 @@ export class AuthService {
         role,
         phone,
         district,
+        citizenSubmitterType: role === 'CITIZEN' ? rest.citizenSubmitterType : null,
         emailVerifiedAt: new Date(),
         phoneVerifiedAt: new Date(),
-      },
+      } as any,
       create: {
         id: userId,
         email,
@@ -137,8 +145,9 @@ export class AuthService {
         phone,
         phoneVerifiedAt: new Date(),
         district,
+        citizenSubmitterType: role === 'CITIZEN' ? rest.citizenSubmitterType : null,
         verificationStatus: 'NOT_REQUIRED',
-      },
+      } as any,
     });
 
     let verificationStatus: VerificationStatus = 'NOT_REQUIRED';
@@ -256,6 +265,19 @@ export class AuthService {
         documentUrls: rest.documentUrls,
         status: 'PENDING',
       });
+    } else if (role === 'GOVERNMENT_OFFICIAL') {
+      verificationStatus = 'PENDING';
+
+      if (!rest.documentUrls || rest.documentUrls.length === 0) {
+        throw new Error('Government ID and authorization documents required for government officials');
+      }
+
+      verificationRequests.push({
+        userId,
+        role,
+        documentUrls: rest.documentUrls,
+        status: 'PENDING',
+      });
     }
 
     // Update User verification status and create requests
@@ -287,7 +309,7 @@ export class AuthService {
         id: 'dev-user-id',
         email: 'dev@localhost',
         fullName: 'Development User',
-        role: 'GOVT_ADMIN' as Role,
+        role: 'GOVERNMENT_ADMIN' as Role,
         verificationStatus: 'NOT_REQUIRED' as VerificationStatus,
         district: 'Ranchi',
         isActive: true,
@@ -385,14 +407,6 @@ export class AuthService {
   }
 
   async verifyToken(token: string): Promise<TokenPayload> {
-    if (token === 'mock-jwt-token' || token === 'dev-bypass-token') {
-      return {
-        userId: 'dev-user-id',
-        email: 'dev@localhost',
-        role: 'GOVT_ADMIN' as Role,
-        verificationStatus: 'NOT_REQUIRED' as VerificationStatus,
-      };
-    }
     try {
       return jwt.verify(token, ENV.JWT_SECRET) as TokenPayload;
     } catch (err) {

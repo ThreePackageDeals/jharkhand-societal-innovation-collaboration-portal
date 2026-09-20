@@ -26,7 +26,7 @@ router.get('/partners/:id', async (req, res) => {
   }
 });
 
-router.post('/partners', authenticate, roleGuard('GOVT_ADMIN'), async (req, res) => {
+router.post('/partners', authenticate, roleGuard('GOVERNMENT_ADMIN'), async (req, res) => {
   try {
     const partner = await industryService.createPartner(req.body);
     sendResponse(res, partner, 201);
@@ -35,7 +35,7 @@ router.post('/partners', authenticate, roleGuard('GOVT_ADMIN'), async (req, res)
   }
 });
 
-router.patch('/partners/:id', authenticate, roleGuard('GOVT_ADMIN', 'INDUSTRY_REP'), async (req, res) => {
+router.patch('/partners/:id', authenticate, roleGuard('GOVERNMENT_ADMIN', 'INDUSTRY_REP'), async (req, res) => {
   try {
     const partner = await industryService.updatePartner(req.params.id, req.body);
     sendResponse(res, partner);
@@ -44,7 +44,7 @@ router.patch('/partners/:id', authenticate, roleGuard('GOVT_ADMIN', 'INDUSTRY_RE
   }
 });
 
-router.delete('/partners/:id', authenticate, roleGuard('GOVT_ADMIN'), async (req, res) => {
+router.delete('/partners/:id', authenticate, roleGuard('GOVERNMENT_ADMIN'), async (req, res) => {
   try {
     await industryService.deletePartner(req.params.id);
     sendResponse(res, { success: true, message: 'Partner deleted' });

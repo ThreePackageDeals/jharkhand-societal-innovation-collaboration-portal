@@ -13,6 +13,7 @@ const roleIcon: Record<string, React.ComponentType<{ className?: string }>> = {
   INDUSTRY_REP: Building2,
   GOVT_ADMIN: Landmark,
   GOVERNMENT_ADMIN: Landmark,
+  GOVERNMENT_OFFICIAL: Landmark,
   SUPER_ADMIN: Code2,
 };
 
@@ -24,6 +25,7 @@ const roleKey: Record<string, { label: string; description: string }> = {
   INDUSTRY_REP: { label: 'account.role_industry', description: 'account.role_industry_desc' },
   GOVT_ADMIN: { label: 'account.role_government', description: 'account.role_government_desc' },
   GOVERNMENT_ADMIN: { label: 'account.role_government', description: 'account.role_government_desc' },
+  GOVERNMENT_OFFICIAL: { label: 'account.role_government_official', description: 'account.role_government_official_desc' },
   SUPER_ADMIN: { label: 'account.role_developer', description: 'account.role_developer_desc' },
 };
 
@@ -75,6 +77,7 @@ export default function AccountPage() {
       </div>
 
       <section className="bg-white border border-stone-300 p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+
         <div className="w-16 h-16 shrink-0 bg-[#1A1A1A] text-white flex items-center justify-center">
           <Icon className="w-8 h-8" />
         </div>
@@ -99,6 +102,29 @@ export default function AccountPage() {
           {organizationName && <div className="border border-stone-200 p-3"><span className="block text-[10px] uppercase tracking-widest font-bold text-stone-500">{t('account.organization')}</span><span className="block mt-1 text-stone-900">{organizationName}</span></div>}
         </div>
       </section>
+
+      {user.role === 'CITIZEN' && (
+        <section className="bg-white border border-stone-300 p-6 space-y-4">
+          <h2 className="font-editorial-serif text-xl font-bold text-stone-900">Citizen entity type</h2>
+          <div className="border border-stone-200 bg-[#FAF7F2] p-4">
+            <div className="text-[10px] uppercase tracking-widest font-bold text-stone-500">Entity</div>
+            <div className="text-sm text-stone-900 font-bold mt-2">
+              {(() => {
+                const v = user.citizenSubmitterType;
+                if (!v) return t('account.not_provided');
+                const map: Record<string, string> = {
+                  citizen: 'Individual',
+                  community_group: 'Community Group',
+                  gram_panchayat: 'Panchayati Raj Institution',
+                  urban_local_body: 'Urban Local Body',
+                  govt_agency: 'Government Agency',
+                };
+                return map[v] || v;
+              })()}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="bg-white border border-stone-300 p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">

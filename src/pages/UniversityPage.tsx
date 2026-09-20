@@ -2,12 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
+import { useAuth } from '../AuthContext';
 import { useAppContext } from '../AppContext';
 import { UniversityModule } from '../components/UniversityModule';
+import { StudentUniversityView } from '../components/StudentUniversityView';
 
 export default function UniversityPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const {
     universities,
     problems,
@@ -29,14 +32,23 @@ export default function UniversityPage() {
         </button>
       </div>
 
-      <UniversityModule
-        universities={universities}
-        problems={problems}
-        proposals={proposals}
-        onSelectProblem={(p) => setSelectedProblem(p)}
-        onSubmitProposal={handleSubmitProposal}
-        onUpdateMilestone={handleUpdateMilestone}
-      />
+      {user?.role === 'STUDENT' ? (
+        <StudentUniversityView
+          universities={universities}
+          problems={problems}
+          proposals={proposals}
+          onSelectProblem={(p) => setSelectedProblem(p)}
+        />
+      ) : (
+        <UniversityModule
+          universities={universities}
+          problems={problems}
+          proposals={proposals}
+          onSelectProblem={(p) => setSelectedProblem(p)}
+          onSubmitProposal={handleSubmitProposal}
+          onUpdateMilestone={handleUpdateMilestone}
+        />
+      )}
     </div>
   );
 }

@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/:id/assign', authenticate, roleGuard('GOVT_ADMIN'), async (req, res) => {
+router.post('/:id/assign', authenticate, roleGuard('GOVERNMENT_ADMIN'), async (req, res) => {
   try {
     const { heiId, department } = req.body;
     if (!heiId) return sendError(res, 'heiId is required', 400);
@@ -58,7 +58,7 @@ router.post('/:id/assign', authenticate, roleGuard('GOVT_ADMIN'), async (req, re
   }
 });
 
-router.patch('/:id/status', authenticate, roleGuard('GOVT_ADMIN', 'FACULTY', 'INDUSTRY_REP'), async (req, res) => {
+router.patch('/:id/status', authenticate, roleGuard('GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL', 'FACULTY', 'INDUSTRY_REP'), async (req, res) => {
   try {
     const problem = await problemsService.updateStatus(req.params.id, req.body);
     sendResponse(res, problem);

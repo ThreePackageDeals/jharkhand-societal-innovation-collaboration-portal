@@ -38,7 +38,7 @@ router.post('/', authenticate, roleGuard('FACULTY'), async (req, res) => {
   }
 });
 
-router.patch('/:id/milestone', authenticate, roleGuard('FACULTY', 'GOVT_ADMIN'), async (req, res) => {
+router.patch('/:id/milestone', authenticate, roleGuard('FACULTY', 'GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL'), async (req, res) => {
   try {
     const { milestoneId, ...updates } = req.body;
     if (!milestoneId) return sendError(res, 'milestoneId is required', 400);
@@ -49,7 +49,7 @@ router.patch('/:id/milestone', authenticate, roleGuard('FACULTY', 'GOVT_ADMIN'),
   }
 });
 
-router.patch('/:id/status', authenticate, roleGuard('GOVT_ADMIN'), async (req, res) => {
+router.patch('/:id/status', authenticate, roleGuard('GOVERNMENT_ADMIN', 'GOVERNMENT_OFFICIAL'), async (req, res) => {
   try {
     const { status } = req.body;
     if (!status) return sendError(res, 'status is required', 400);

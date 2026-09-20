@@ -9,6 +9,7 @@ interface UserProfile {
   role: Role;
   verificationStatus: VerificationStatus;
   district?: string;
+  citizenSubmitterType?: string | null;
   studentProfile?: any;
   facultyProfile?: any;
   industryProfile?: any;
@@ -23,7 +24,6 @@ interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
   login: (token: string) => Promise<void>;
-  bypassLogin: () => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
   completeProfile: (data: any, registrationToken: string) => Promise<{
@@ -31,6 +31,7 @@ interface AuthContextType {
     verificationStatus: VerificationStatus;
     sheerIdVerificationUrl?: string;
   }>;
+  devLogin: (role: Role, verified: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,19 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await refreshUser();
   };
 
-  const bypassLogin = useCallback(() => {
-    const mockUser: UserProfile = {
-      id: 'dev-bypass-id',
-      email: 'dev@bypass.com',
-      fullName: 'Dev Bypass User',
-      role: 'SUPER_ADMIN',
-      verificationStatus: 'VERIFIED',
-    };
-    localStorage.setItem('auth_token', 'dev-bypass-token');
-    setUser(mockUser);
-    setIsLoading(false);
-  }, []);
-
   const logout = () => {
     localStorage.removeItem('auth_token');
     setUser(null);
@@ -122,14 +110,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Dev login function for testing
+  const devLogin = useCallback((role: Role, verified: boolean) => {
+    const mockUniversityId = role === 'STUDENT' || role === 'FACULTY' ? 'hei-bit-mesra' : undefined;
+    const mockProfile: UserProfile = {
+      id: `dev-${role.toLowerCase()}-${Date.now()}`,
+      email: `dev.${role.toLowerCase()}@test.local`,
+      fullName: `Dev ${role.replace(/_/g, ' ')}`,
+      phone: '+919876543210',
+      role,
+      verificationStatus: verified ? 'VERIFIED' : 'PENDING',
+      district: 'Ranchi',
+      citizenSubmitterType: role === 'CITIZEN' ? 'citizen' : null,
+      studentProfile: role === 'STUDENT' ? {
+        universityId: mockUniversityId,
+        studentIdNumber: 'DEV2024001',
+        department: 'Computer Science',
+        university: { id: mockUniversityId, name: 'BIT Mesra' },
+      } : undefined,
+      facultyProfile: role === 'FACULTY' ? {
+        universityId: mockUniversityId,
+        employeeId: 'FAC001',
+        department: 'Civil Engineering',
+        designation: 'Professor',
+        university: { id: mockUniversityId, name: 'BIT Mesra' },
+      } : undefined,
+      industryProfile: role === 'INDUSTRY_REP' ? {
+        organizationId: 'org-tata-steel',
+        designation: 'CSR Lead',
+        organization: { id: 'org-tata-steel', name: 'Tata Steel' },
+      } : undefined,
+      accountConnections: {
+        email: true,
+        phone: true,
+        google: false,
+      },
+    };
+
+    setUser(mockProfile);
+    localStorage.setItem('auth_token', `dev-token-${role}-${Date.now()}`);
+  }, []);
+
   const value: AuthContextType = {
     user,
     isLoading,
     login,
-    bypassLogin,
     logout,
     refreshUser,
     completeProfile,
+    devLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
